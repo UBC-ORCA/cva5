@@ -19,7 +19,7 @@ const char* cva5_csv_log_file_name () {
     return csv_log_name;
 }
 
-//#define TRACE_ON
+#define TRACE_ON
 using namespace std;
 int main(int argc, char **argv) {
     ofstream logFile, sigFile, pcFile;
@@ -78,9 +78,9 @@ int main(int argc, char **argv) {
         cva5Tracer->set_pc_file(&pcFile);
     }
 
-    #ifdef TRACE_ON
+    //#ifdef TRACE_ON
         cva5Tracer->start_tracer(argv[4]);
-	#endif
+    //	#endif
 	cva5Tracer->reset();
 	cout << "--------------------------------------------------------------\n";
 	cout << "   Starting Simulation, logging to " << argv[1] << "\n";

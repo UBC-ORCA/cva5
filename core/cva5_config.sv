@@ -260,18 +260,20 @@ package cva5_config;
         int unsigned CSR;
         int unsigned MUL;
         int unsigned DIV;
+        int unsigned CFU;
         int unsigned BR;
         int unsigned IEC;
     } unit_id_param_t;
 
     localparam unit_id_param_t EXAMPLE_UNIT_IDS = '{
         ALU : 0,
-        LS : 1,
+        LS  : 1,
         CSR : 2,
         MUL : 3,
         DIV : 4,
-        BR : 5,
-        IEC : 6
+        CFU : 5,
+        BR  : 6,
+        IEC : 7
     };
 
     ////////////////////////////////////////////////////

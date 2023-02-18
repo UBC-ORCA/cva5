@@ -8,7 +8,7 @@ set _xil_proj_name_ "cva5_nexys_wrapper"
 set sources_dir $origin_dir/../../../
 
 # Create project
-create_project ${_xil_proj_name_} $origin_dir/${_xil_proj_name_} 
+create_project ${_xil_proj_name_} $origin_dir/${_xil_proj_name_} -part xc7a100tcsg324-1
 
 # Set the directory path for the new project
 set proj_dir [get_property directory [current_project]]
@@ -16,6 +16,7 @@ set proj_dir [get_property directory [current_project]]
 
 # Set project properties
 set obj [current_project]
+set_property -name "board_part" -value "digilentinc.com:nexys-a7-100t:part0:1.2" -objects $obj
 set_property -name "simulator_language" -value "Mixed" -objects $obj
 set_property -name "target_language" -value "Verilog" -objects $obj
 

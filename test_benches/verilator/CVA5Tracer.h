@@ -30,7 +30,7 @@
 #include "Vcva5_sim.h"
 #include "SimMem.h"
 #include "AXI_DDR_simulation/axi_ddr_sim.h"
-//#define TRACE_ON
+#define TRACE_ON
 
 #define COMPLIANCE_SIG_PHASE_NOP 0x00B00013U
 #define BENCHMARK_START_COLLECTION_NOP 0x00C00013U
@@ -61,9 +61,9 @@ public:
 private:
   axi_ddr_sim * axi_ddr;
   SimMem *mem;
-#ifdef TRACE_ON
+//#ifdef TRACE_ON
 		VerilatedFstC	*verilatorWaveformTracer;
-#endif
+//#endif
   std::ofstream* logFile;
   std::ofstream* pcFile;
   bool logPC = false;

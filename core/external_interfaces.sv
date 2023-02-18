@@ -174,3 +174,43 @@ interface l1_arbiter_return_interface;
 
 endinterface
 
+interface cfu_interface
+    import cfu_types::*;
+    #(
+      parameter cfu_config_t CFU_CONFIG = DEFAULT_CFU_CONFIG
+    );
+
+    `define NON_NEG_MSG( WIDTH ) ( ( WIDTH != 0 ) ? ( ( WIDTH ) - 1 ) : ( 0 ) )
+    logic                                         req_en;
+    logic                                         req_valid;
+    logic                                         req_ready;
+    logic [`NON_NEG_MSG(CFU_CONFIG.REQ_ID_W):0]   req_id;
+    logic [`NON_NEG_MSG(CFU_CONFIG.CFU_ID_W):0]   req_cfu;
+    logic [`NON_NEG_MSG(CFU_CONFIG.STATE_ID_W):0] req_state;
+    logic [`NON_NEG_MSG(CFU_CONFIG.FUNC_ID_W):0]  req_func;
+    logic [`NON_NEG_MSG(CFU_CONFIG.INSN_W):0]     req_insn;
+    logic [`NON_NEG_MSG(CFU_CONFIG.DATA_W):0]     req_data0;
+    logic [`NON_NEG_MSG(CFU_CONFIG.DATA_W):0]     req_data1;
+    logic                                         resp_valid;
+    logic                                         resp_ready;
+    logic [`NON_NEG_MSG(CFU_CONFIG.REQ_ID_W):0]   resp_id;
+    logic [`NON_NEG_MSG(CFU_CONFIG.STATUS_W):0]   resp_status;
+    logic [`NON_NEG_MSG(CFU_CONFIG.DATA_W):0]     resp_data;
+
+    //TODO
+    modport csr        (input   resp_valid, resp_status,
+                        output  req_en, req_cfu, req_state);
+    modport issue      (input   req_en, req_ready,
+                        output  req_valid, req_id, req_func, req_insn, req_data0, req_data1);
+    modport writeback  (input   resp_valid, resp_id, resp_data,
+                        output  resp_ready);
+                        
+    modport requester  (input   resp_valid, req_ready, resp_id, resp_status, resp_data,
+                        output  req_valid, resp_ready, req_id, req_cfu, req_state, req_func, 
+                                req_insn, req_data0, req_data1);
+    modport responder  (output  resp_valid, req_ready, resp_id, resp_status, resp_data, 
+                        input   req_valid, resp_ready, req_id, req_cfu, req_state, req_func, 
+                                req_insn, req_data0, req_data1);
+
+endinterface
+

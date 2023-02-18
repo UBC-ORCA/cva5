@@ -28,7 +28,7 @@ module cva5_sim
     import cva5_types::*;
 
     # (
-        parameter MEMORY_FILE = "/home/ematthew/Research/RISCV/software/riscv-tools/riscv-tests/benchmarks/dhrystone.riscv.hw_init" //change this to appropriate location "/home/ematthew/Downloads/dhrystone.riscv.sim_init"
+        parameter MEMORY_FILE = "/home/brumaire/RISCV/cva5pr/cva5/examples/nexys/cfu.hw_init"
     )
     (
         input logic clk,
@@ -108,7 +108,7 @@ module cva5_sim
         INCLUDE_U_MODE : 0,
         INCLUDE_MUL : 1,
         INCLUDE_DIV : 1,
-        INCLUDE_IFENCE : 0,
+        INCLUDE_IFENCE : 1,
         INCLUDE_CSRS : 1,
         INCLUDE_AMO : 0,
         //CSR constants
@@ -222,6 +222,8 @@ module cva5_sim
 	//L2 and AXI
     axi_interface axi ();
     l2_requester_interface l2 ();
+    // CFU
+    cfu_interface cfu ();
 
     assign instruction_bram_addr = instruction_bram.addr;
     assign instruction_bram_en = instruction_bram.en;
@@ -237,6 +239,7 @@ module cva5_sim
 
     l1_to_axi  arb(.*, .cpu(l2), .axi(axi));
     cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*);
+    cfu_unit cfu_unit_block(.*);
 
     initial begin
         write_uart = 0;

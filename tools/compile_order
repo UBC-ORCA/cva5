@@ -1,5 +1,6 @@
 core/cva5_config.sv
 core/riscv_types.sv
+core/cfu_types.sv
 core/csr_types.sv  
 core/cva5_types.sv  
 l2_arbiter/l2_config_and_types.sv 
@@ -90,6 +91,6 @@ core/axi_to_arb.sv
 core/instruction_metadata_and_id_management.sv
 
 core/l1_arbiter.sv  
-
+core/cfu_unit.sv
 core/cva5.sv
 

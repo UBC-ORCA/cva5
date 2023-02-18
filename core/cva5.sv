@@ -45,7 +45,9 @@ module cva5
         wishbone_interface.master dwishbone,
         wishbone_interface.master iwishbone,
 
+
         l2_requester_interface.master l2,
+        cfu_interface cfu,
 
         input interrupt_t s_interrupt,
         input interrupt_t m_interrupt
@@ -62,8 +64,9 @@ module cva5
     localparam int unsigned CSR_UNIT_ID = LS_UNIT_ID + int'(CONFIG.INCLUDE_CSRS);
     localparam int unsigned MUL_UNIT_ID = CSR_UNIT_ID + int'(CONFIG.INCLUDE_MUL);
     localparam int unsigned DIV_UNIT_ID = MUL_UNIT_ID + int'(CONFIG.INCLUDE_DIV);
+    localparam int unsigned CFU_UNIT_ID = DIV_UNIT_ID + 1;
     //Non-writeback units
-    localparam int unsigned BRANCH_UNIT_ID = DIV_UNIT_ID + 1;
+    localparam int unsigned BRANCH_UNIT_ID = CFU_UNIT_ID + 1;
     localparam int unsigned IEC_UNIT_ID = BRANCH_UNIT_ID + 1;
 
     //Total number of units
@@ -71,11 +74,12 @@ module cva5
 
     localparam unit_id_param_t UNIT_IDS = '{
         ALU : ALU_UNIT_ID,
-        LS : LS_UNIT_ID,
+        LS  : LS_UNIT_ID,
         CSR : CSR_UNIT_ID,
         MUL : MUL_UNIT_ID,
         DIV : DIV_UNIT_ID,
-        BR : BRANCH_UNIT_ID,
+        CFU : CFU_UNIT_ID,
+        BR  : BRANCH_UNIT_ID,
         IEC : IEC_UNIT_ID
     };
 
@@ -83,7 +87,8 @@ module cva5
     //Writeback Port Assignment
     //
     localparam int unsigned NUM_WB_UNITS_GROUP_1 = 1;//ALU
-    localparam int unsigned NUM_WB_UNITS_GROUP_2 = 1 + int'(CONFIG.INCLUDE_CSRS) + int'(CONFIG.INCLUDE_MUL) + int'(CONFIG.INCLUDE_DIV);//LS
+    localparam int unsigned NUM_WB_UNITS_GROUP_2 = 1 /* LS */ + int'(CONFIG.INCLUDE_CSRS) + int'(CONFIG.INCLUDE_MUL) + int'(CONFIG.INCLUDE_DIV) + 1 /* CFU */;
+
     localparam int unsigned NUM_WB_UNITS = NUM_WB_UNITS_GROUP_1 + NUM_WB_UNITS_GROUP_2;
 
     ////////////////////////////////////////////////////
@@ -101,6 +106,9 @@ module cva5
     logic branch_exception_is_jump;
 
     ras_interface ras();
+    //cfu_interface cfu();
+    //cfu_interface.requester cfu,
+
 
     issue_packet_t issue;
     register_file_issue_interface #(.NUM_WB_GROUPS(CONFIG.NUM_WB_GROUPS)) rf_issue();
@@ -181,6 +189,7 @@ module cva5
     logic interrupt_pending;
 
     logic processing_csr;
+    logic processing_cfu;
 
     //Decode Unit and Fetch Unit
     logic illegal_instruction;
@@ -370,7 +379,8 @@ module cva5
         .unit_issue (unit_issue),
         .gc (gc),
         .current_privilege (current_privilege),
-        .exception (exception[PRE_ISSUE_EXCEPTION])
+        .exception (exception[PRE_ISSUE_EXCEPTION]),
+        .cfu (cfu)
     );
 
     ////////////////////////////////////////////////////
@@ -490,7 +500,8 @@ module cva5
             .retire(retire),
             .retire_ids(retire_ids),
             .s_interrupt(s_interrupt),
-            .m_interrupt(m_interrupt)
+            .m_interrupt(m_interrupt),
+            .cfu(cfu)
         );
     end endgenerate
 
@@ -539,10 +550,20 @@ module cva5
         );
     end endgenerate
 
+
+    assign {unit_wb[UNIT_IDS.CFU].phys_addr, unit_wb[UNIT_IDS.CFU].id} = cfu.resp_id;
+    assign unit_wb[UNIT_IDS.CFU].rd = cfu.resp_data;
+    assign unit_wb[UNIT_IDS.CFU].done = cfu.resp_valid;
+    assign cfu.resp_ready = unit_wb[UNIT_IDS.CFU].ack; 
+    assign unit_issue[UNIT_IDS.CFU].ready = cfu.req_ready;
+
+    // FIXME : Speculative execution
+    assign processing_cfu = ~cfu.req_ready | cfu.req_valid;
+    
     ////////////////////////////////////////////////////
     //Writeback
     //First writeback port: ALU
-    //Second writeback port: LS, CSR, [MUL], [DIV]
+    //Second writeback port: LS, CSR, [MUL], [DIV], CFU
     localparam int unsigned NUM_UNITS_PER_PORT [CONFIG.NUM_WB_GROUPS] = '{NUM_WB_UNITS_GROUP_1, NUM_WB_UNITS_GROUP_2};
     writeback #(
         .CONFIG (CONFIG),

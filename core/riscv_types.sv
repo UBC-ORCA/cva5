@@ -52,8 +52,34 @@ package riscv_types;
         AMO_T = 5'b01011,
         SYSTEM_T = 5'b11100,
         //end of RV32I
-        CUSTOM_T = 5'b11110
+        // CFU
+        CUSTOM_0_T = 5'b00010,
+        CUSTOM_1_T = 5'b01010,
+        CUSTOM_2_T = 5'b10110,
+        CUSTOM_3_T = 5'b11110,
+        // VFU - RVV
+        VLOAD_T    = 5'b00001,
+        VSTORE_T   = 5'b01001,
+        VALU_CFG_T = 5'b10101
     } opcodes_trimmed_t;
+
+    typedef enum logic [2:0] {
+        OPIVV_fn3 = 3'b000,
+        OPFVV_fn3 = 3'b001,
+        OPMVV_fn3 = 3'b010,
+        OPIVI_fn3 = 3'b011,
+        OPIVX_fn3 = 3'b100,
+        OPFVF_fn3 = 3'b101,
+        OPMVX_fn3 = 3'b110,
+        OPCFG_fn3 = 3'b111
+    } fn3_valu_cfg_t;
+
+    typedef enum logic [2:0] {
+        E08_fn3 = 3'b000,
+        E16_fn3 = 3'b101,
+        E32_fn3 = 3'b110,
+        E64_fn3 = 3'b111
+    } fn3_vmem_width_t;
 
     typedef enum logic [2:0] {
         ADD_SUB_fn3 = 3'b000,
@@ -130,6 +156,10 @@ package riscv_types;
         MIP = 12'h344,
 
 
+        //Machine CFU regs
+        MCFU_SELECTOR = 12'hBC0,
+        MCFU_SELECTOR_TABLE = 12'hBC1,
+
         //Machine Counters
         MCYCLE = 12'hB00,
         MINSTRET = 12'hB02,
@@ -166,6 +196,9 @@ package riscv_types;
         CYCLEH = 12'hC80,
         TIMEH = 12'hC81,
         INSTRETH = 12'hC82,
+        //User CFU regs
+        CFU_SELECTOR_INDEX = 12'h800,
+        CFU_STATUS = 12'h801,
 
         //Debug regs
         DCSR = 12'h7B0,
