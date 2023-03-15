@@ -152,19 +152,19 @@ module decode_and_issue
     assign uses_rs[RS2] = opcode_trim inside {BRANCH_T, ARITH_T, AMO_T} | (opcode_trim inside {CUSTOM_0_T, CUSTOM_2_T} & is_cfu) | vfu_uses_rs[RS2];//Stores are exempted due to store forwarding
     assign uses_rd = opcode_trim inside {LUI_T, AUIPC_T, JAL_T, JALR_T, LOAD_T, ARITH_IMM_T, ARITH_T} | is_csr | (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T} & is_cfu) | vfu_uses_rd;
 
-    // rs1  : VMEM [all] - VALU_CFG [ OPIVX (all) | OPFVF (all) | OPMVX (all) | OPCFG (vsetvli, vsetvl) ]
+    // rs1  : VMEM [all] - VALU_CFG_T [ OPIVX (all) | OPFVF (all) | OPMVX (all) | OPCFG (vsetvli, vsetvl) ]
     assign vfu_uses_rs[RS1] = is_vfu & (opcode_trim inside {VLOAD_T, VSTORE_T} |
                                         (opcode_trim inside {VALU_CFG_T} &
                                           ((fn3 inside {OPIVX_fn3, OPFVF_fn3, OPMVX_fn3}) | 
                                              (fn3 inside {OPCFG_fn3} & ((decode.instruction[31] == 1'h1) | 
                                                                          (decode.instruction[31:30] == 2'h2))))));
-    // rs2  : VMEME [strided] - VALU_CFG [ OPCFG (vsetvl) ]
+    // rs2  : VMEME [strided] - VALU_CFG_T [ OPCFG (vsetvl) ]
     assign vfu_uses_rs[RS2] = is_vfu & ((opcode_trim inside {VLOAD_T, VSTORE_T} & 
                                             (decode.instrucion[27:26] == 2'h2)) | 
-                                          (opcode_trim inside {VALU_CFG} & 
+                                          (opcode_trim inside {VALU_CFG_T} & 
                                             (fn3 inside {OPCFG_fn3} & 
                                               (decode.instruction[31:30] == 2'h2))));
-    // rd   : VALU_CFG [ OPFVV (vfmv.f.s) | OPMVV (vmv.x.s, vfirst.m, vcpop.m) | OPMVX () | OPCFG (all) ]
+    // rd   : VALU_CFG_T [ OPFVV (vfmv.f.s) | OPMVV (vmv.x.s, vfirst.m, vcpop.m) | OPMVX () | OPCFG (all) ]
     assign vfu_uses_rd = is_vfu & ((fn3 inside {OPFVV_fn3, OPMVV_fn3} & (decode.instruction[31:26] == 6'h10)) |
                                      (fn3 inside {OPCFG_fn3}));
     ////////////////////////////////////////////////////
