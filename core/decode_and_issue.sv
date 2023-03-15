@@ -154,7 +154,7 @@ module decode_and_issue
 
     // rs1  : VMEM [all] - VALU_CFG [ OPIVX (all) | OPFVF (all) | OPMVX (all) | OPCFG (vsetvli, vsetvl) ]
     assign vfu_uses_rs[RS1] = is_vfu & (opcode_trim inside {VLOAD_T, VSTORE_T} |
-                                        (opcode_trim inside {VALU_CFG} &
+                                        (opcode_trim inside {VALU_CFG_T} &
                                           ((fn3 inside {OPIVX_fn3, OPFVF_fn3, OPMVX_fn3}) | 
                                              (fn3 inside {OPCFG_fn3} & ((decode.instruction[31] == 1'h1) | 
                                                                          (decode.instruction[31:30] == 2'h2))))));
@@ -165,7 +165,7 @@ module decode_and_issue
                                             (fn3 inside {OPCFG_fn3} & 
                                               (decode.instruction[31:30] == 2'h2))));
     // rd   : VALU_CFG [ OPFVV (vfmv.f.s) | OPMVV (vmv.x.s, vfirst.m, vcpop.m) | OPMVX () | OPCFG (all) ]
-    assign vfu_uses_rd = is_vfu & ((fn3 inside {OPFVV_fn3, OPMVV_fn2} & (decode.instruction[31:26] == 6'h10)) |
+    assign vfu_uses_rd = is_vfu & ((fn3 inside {OPFVV_fn3, OPMVV_fn3} & (decode.instruction[31:26] == 6'h10)) |
                                      (fn3 inside {OPCFG_fn3}));
     ////////////////////////////////////////////////////
     //Unit Determination

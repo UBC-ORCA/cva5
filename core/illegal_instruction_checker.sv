@@ -131,6 +131,7 @@ module  illegal_instruction_checker
 
     logic base_legal;
     logic custom_legal;
+    logic vector_legal;
     logic csr_legal;
     logic csr_addr_base;
     logic csr_addr_machine;
