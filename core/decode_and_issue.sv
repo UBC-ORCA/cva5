@@ -160,7 +160,7 @@ module decode_and_issue
                                                                          (decode.instruction[31:30] == 2'h2))))));
     // rs2  : VMEME [strided] - VALU_CFG_T [ OPCFG (vsetvl) ]
     assign vfu_uses_rs[RS2] = is_vfu & ((opcode_trim inside {VLOAD_T, VSTORE_T} & 
-                                            (decode.instrucion[27:26] == 2'h2)) | 
+                                            (decode.instruction[27:26] == 2'h2)) | 
                                           (opcode_trim inside {VALU_CFG_T} & 
                                             (fn3 inside {OPCFG_fn3} & 
                                               (decode.instruction[31:30] == 2'h2))));
