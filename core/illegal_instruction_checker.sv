@@ -162,14 +162,14 @@ module  illegal_instruction_checker
 
     assign csr_addr_base = instruction[31:20] inside {
         FFLAGS, FRM, FCSR,
-        CYCLE, TIME, INSTRET, CYCLEH, TIMEH, INSTRETH
+        CYCLE, TIME, INSTRET, CYCLEH, TIMEH, INSTRETH, CFU_SELECTOR_INDEX, CFU_STATUS
     };
 
     assign csr_addr_machine = instruction[31:20] inside {
         MVENDORID, MARCHID, MIMPID, MHARTID,
         MSTATUS, MISA, MEDELEG, MIDELEG, MIE, MTVEC, MCOUNTEREN,
         MSCRATCH, MEPC, MCAUSE, MTVAL, MIP,
-        MCYCLE, MINSTRET, MCYCLEH, MINSTRETH
+        MCYCLE, MINSTRET, MCYCLEH, MINSTRETH, MCFU_SELECTOR, MCFU_SELECTOR_TABLE
     };
 
     assign csr_addr_supervisor = instruction[31:20] inside {
