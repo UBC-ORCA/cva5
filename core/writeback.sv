@@ -57,7 +57,7 @@ module writeback
 
     typedef int unsigned unit_count_t [CONFIG.NUM_WB_GROUPS];
 
-    function unit_count_t get_cumulative_unit_count();
+    function static unit_count_t get_cumulative_unit_count();
         unit_count_t counts;
         int unsigned cumulative_count = 0;
         for (int i = 0; i < CONFIG.NUM_WB_GROUPS; i++) begin
