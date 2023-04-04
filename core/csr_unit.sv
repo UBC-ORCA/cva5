@@ -533,7 +533,6 @@ generate if (CONFIG.INCLUDE_M_MODE) begin : gen_csr_m_mode
     always_ff @(posedge clk) begin
         if (rst) begin
             mcfu_selector <= 0; 
-            mcfu_selector.en <= 1; // FIXME Should be 0
         end else if (mwrite_en(MCFU_SELECTOR))
             mcfu_selector <= updated_csr;
     end
@@ -637,8 +636,8 @@ endgenerate
     always_ff @(posedge clk) begin
         if (rst)
             cfu_status <= 0;
-        else if (commit && (csr_inputs_r.addr == CFU_STATUS))
-            cfu_status <= updated_csr;
+        else if (commit && (csr_inputs_r.op == CSR_RW) && (csr_inputs_r.addr == CFU_STATUS))
+            cfu_status <= csr_inputs_r.data;
         else if (cfu.resp_valid) // FIXME : cfu_status might be updated before the register file
             cfu_status <= 32'(cfu.resp_status);
     end
