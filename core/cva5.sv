@@ -554,7 +554,8 @@ module cva5
     assign {unit_wb[UNIT_IDS.CFU].phys_addr, unit_wb[UNIT_IDS.CFU].id} = cfu.resp_id;
     assign unit_wb[UNIT_IDS.CFU].rd = cfu.resp_data;
     assign unit_wb[UNIT_IDS.CFU].done = cfu.resp_valid;
-    assign cfu.resp_ready = unit_wb[UNIT_IDS.CFU].ack; 
+    assign cfu.resp_ready = 1; 
+    //assign cfu.resp_ready = unit_wb[UNIT_IDS.CFU].ack; 
     assign unit_issue[UNIT_IDS.CFU].ready = cfu.req_ready;
 
     // FIXME : Speculative execution
