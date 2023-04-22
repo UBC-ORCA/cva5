@@ -223,7 +223,9 @@ module cva5_sim
     axi_interface axi ();
     l2_requester_interface l2 ();
     // CFU
-    cfu_interface cfu ();
+	cfu_interface cpu_mux0 ();
+	cfu_interface cfu_mux0 ();
+	cfu_interface cfu_mux1 ();
 
     assign instruction_bram_addr = instruction_bram.addr;
     assign instruction_bram_en = instruction_bram.en;
@@ -238,8 +240,10 @@ module cva5_sim
     assign data_bram.data_out = data_bram_data_out;
 
     l1_to_axi  arb(.*, .cpu(l2), .axi(axi));
-    cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*);
-    cfu_unit cfu_unit_block(.*);
+    cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*, .cfu(cpu_mux0));
+    cfu_unit cfu_unit_block(.*, .cfu(cfu_mux0));
+    crc_unit crc_unit_block(.*, .cfu(cfu_mux1));
+	mux_unit myMux (.*, .cva5_in(cpu_mux0), .cfu_unit_out(cfu_mux0), .crc_unit_out(cfu_mux1));
 
     initial begin
         write_uart = 0;

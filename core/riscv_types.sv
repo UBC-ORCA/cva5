@@ -203,7 +203,11 @@ package riscv_types;
         //Debug regs
         DCSR = 12'h7B0,
         DPC = 12'h7B1,
-        DSCRATCH = 12'h7B2
+        DSCRATCH = 12'h7B2,
+
+		//CFU CSRS
+		CUSTOM_URW_CSR = 12'h8??
+
     } csr_reg_addr_t;
 
     typedef enum logic [2:0] {

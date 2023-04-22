@@ -184,6 +184,7 @@ interface cfu_interface
     logic                                         req_en;
     logic                                         req_valid;
     logic                                         req_ready;
+	logic                                         req_cfu_csr;
     logic [`NON_NEG_MSG(CFU_CONFIG.REQ_ID_W):0]   req_id;
     logic [`NON_NEG_MSG(CFU_CONFIG.CFU_ID_W):0]   req_cfu;
     logic [`NON_NEG_MSG(CFU_CONFIG.STATE_ID_W):0] req_state;
@@ -201,16 +202,16 @@ interface cfu_interface
     modport csr        (input   resp_valid, resp_status,
                         output  req_en, req_cfu, req_state);
     modport issue      (input   req_en, req_ready,
-                        output  req_valid, req_id, req_func, req_insn, req_data0, req_data1);
+                        output  req_valid, req_id, req_func, req_insn, req_data0, req_data1, req_cfu_csr);
     modport writeback  (input   resp_valid, resp_id, resp_data,
                         output  resp_ready);
                         
     modport requester  (input   resp_valid, req_ready, resp_id, resp_status, resp_data,
                         output  req_valid, resp_ready, req_id, req_cfu, req_state, req_func, 
-                                req_insn, req_data0, req_data1);
+                                req_insn, req_data0, req_data1, req_cfu_csr);
     modport responder  (output  resp_valid, req_ready, resp_id, resp_status, resp_data, 
                         input   req_valid, resp_ready, req_id, req_cfu, req_state, req_func, 
-                                req_insn, req_data0, req_data1);
+                                req_insn, req_data0, req_data1, req_cfu_csr);
 
 endinterface
 

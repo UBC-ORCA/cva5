@@ -137,6 +137,7 @@ module  illegal_instruction_checker
     logic csr_addr_machine;
     logic csr_addr_supervisor;
     logic csr_addr_debug;
+	logic csr_addr_custom;
     logic mul_legal;
     logic div_legal;
     logic ifence_legal;
@@ -182,6 +183,10 @@ module  illegal_instruction_checker
         DCSR, DPC, DSCRATCH
     };
 
+	assign csr_addr_custom = instruction[31:20] inside {
+		CUSTOM_URW_CSR 
+	};
+
     //Privilege check done later on instruction issue
     //Here we just check instruction encoding and valid CSR address
     assign csr_legal = instruction inside {
@@ -219,6 +224,7 @@ module  illegal_instruction_checker
         base_legal |
         custom_legal |
         vector_legal |
+		csr_addr_custom |
         (CONFIG.INCLUDE_CSRS & csr_legal) |
         (CONFIG.INCLUDE_MUL & mul_legal) |
         (CONFIG.INCLUDE_DIV & div_legal) |
