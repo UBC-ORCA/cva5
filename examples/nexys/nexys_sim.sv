@@ -28,7 +28,7 @@ module cva5_sim
     import cva5_types::*;
 
     # (
-        parameter MEMORY_FILE = "/home/brumaire/RISCV/cva5pr/cva5/examples/nexys/cfu.hw_init"
+        parameter MEMORY_FILE = "/home/brumaire/RISCV/cva5pr/embench/build/bin/crc32.hw_init"
     )
     (
         input logic clk,
@@ -219,13 +219,12 @@ module cva5_sim
     wishbone_interface dwishbone();
     wishbone_interface iwishbone();
 
-	//L2 and AXI
+    //L2 and AXI
     axi_interface axi ();
     l2_requester_interface l2 ();
+
     // CFU
-	cfu_interface cpu_mux0 ();
-	cfu_interface cfu_mux0 ();
-	cfu_interface cfu_mux1 ();
+    cfu_interface cfu ();
 
     assign instruction_bram_addr = instruction_bram.addr;
     assign instruction_bram_en = instruction_bram.en;
@@ -240,10 +239,8 @@ module cva5_sim
     assign data_bram.data_out = data_bram_data_out;
 
     l1_to_axi  arb(.*, .cpu(l2), .axi(axi));
-    cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*, .cfu(cpu_mux0));
-    cfu_unit cfu_unit_block(.*, .cfu(cfu_mux0));
-    crc_unit crc_unit_block(.*, .cfu(cfu_mux1));
-	mux_unit myMux (.*, .cva5_in(cpu_mux0), .cfu_unit_out(cfu_mux0), .crc_unit_out(cfu_mux1));
+    cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*);
+    crc_unit crc_unit_block(.*);
 
     initial begin
         write_uart = 0;

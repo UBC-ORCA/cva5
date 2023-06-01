@@ -23,7 +23,7 @@
 #include <iostream>
 #include "CVA5Tracer.h"
 
-#define TRACE_ON
+//#define TRACE_ON
 
 bool CVA5Tracer::check_if_instruction_retired(uint32_t instruction) {
     bool result = false;
@@ -115,16 +115,16 @@ void CVA5Tracer::tick() {
 
 		tb->clk = 1;
 		tb->eval();
-        //#ifdef TRACE_ON
+        #ifdef TRACE_ON
             verilatorWaveformTracer->dump(vluint32_t(cycle_count));
-        //#endif
+        #endif
         cycle_count++;
 
         tb->clk = 0;
         tb->eval();
-        //#ifdef TRACE_ON
+        #ifdef TRACE_ON
             verilatorWaveformTracer->dump(vluint32_t(cycle_count));
-        //#endif
+        #endif
 
         tb->clk = 1;
         tb->eval();
@@ -132,23 +132,23 @@ void CVA5Tracer::tick() {
         update_UART();
         update_memory();
 
-	//#ifdef PC_TRACE_ON
+	#ifdef PC_TRACE_ON
         for (int i =0; i < tb->NUM_RETIRE_PORTS; i++) {
             if (logPC && tb->retire_ports_valid[i]) {
             	*pcFile << std::hex << tb->retire_ports_pc[i] << std::endl;
             }
         }
-	//#endif
+	#endif
 
 }
 
 
 void CVA5Tracer::start_tracer(const char *trace_file) {
-	//#ifdef TRACE_ON
+	#ifdef TRACE_ON
 		verilatorWaveformTracer = new VerilatedFstC;
 		tb->trace(verilatorWaveformTracer, 99);
 		verilatorWaveformTracer->open(trace_file);
-	//#endif
+	#endif
 }
 
 
@@ -159,9 +159,9 @@ uint64_t CVA5Tracer::get_cycle_count() {
 
 
 CVA5Tracer::CVA5Tracer(std::ifstream& programFile) {
-	//#ifdef TRACE_ON
+	#ifdef TRACE_ON
 		Verilated::traceEverOn(true);
-	//#endif
+	#endif
 
 
     tb = new Vcva5_sim;
@@ -182,10 +182,10 @@ CVA5Tracer::CVA5Tracer(std::ifstream& programFile) {
 
 
 CVA5Tracer::~CVA5Tracer() {
-	//#ifdef TRACE_ON
+	#ifdef TRACE_ON
 		verilatorWaveformTracer->flush();
 		verilatorWaveformTracer->close();
-	//#endif
+	#endif
 	delete mem;
 	delete tb;
 }

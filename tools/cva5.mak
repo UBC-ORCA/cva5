@@ -8,7 +8,7 @@ CVA5_INCLUDED_SIM_SRCS = $(addprefix $(VERILATOR_DIR)/, cva5_sim.cc AXI_DDR_simu
 
 
 #Tracing: Set to True or False
-TRACE_ENABLE?=True
+TRACE_ENABLE?=False
 
 
 #Simulation Binary Name

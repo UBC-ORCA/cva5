@@ -106,9 +106,6 @@ module cva5
     logic branch_exception_is_jump;
 
     ras_interface ras();
-    //cfu_interface cfu();
-    //cfu_interface.requester cfu,
-
 
     issue_packet_t issue;
     register_file_issue_interface #(.NUM_WB_GROUPS(CONFIG.NUM_WB_GROUPS)) rf_issue();

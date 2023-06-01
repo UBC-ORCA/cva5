@@ -75,7 +75,7 @@ module decode_and_issue
         exception_interface.unit exception,
 
         //CFU
-        cfu_interface.issue cfu
+        cfu_interface cfu
     );
 
     logic [2:0] fn3;
@@ -162,7 +162,7 @@ module decode_and_issue
                                           ((fn3 inside {OPIVX_fn3, OPFVF_fn3, OPMVX_fn3}) | 
                                              (fn3 inside {OPCFG_fn3} & ((decode.instruction[31] == 1'h1) | 
                                                                          (decode.instruction[31:30] == 2'h2))))));
-    // rs2  : VMEME [strided] - VALU_CFG_T [ OPCFG (vsetvl) ]
+    // rs2  : VMEM [strided] - VALU_CFG_T [ OPCFG (vsetvl) ]
     assign vfu_uses_rs[RS2] = is_vfu & ((opcode_trim inside {VLOAD_T, VSTORE_T} & 
                                             (decode.instruction[27:26] == 2'h2)) | 
                                           (opcode_trim inside {VALU_CFG_T} & 
@@ -566,12 +566,12 @@ module decode_and_issue
     assign cfu.req_data0 = rf.data[RS1];
     assign cfu.req_data1 = (~is_vfu & cfu_imm_type) ? 32'(issue.instruction[31:24]) : rf.data[RS2];
     assign cfu.req_valid = unit_issue[UNIT_IDS.CFU].new_request;
-	assign cfu.req_cfu_csr = is_cfu_csr_reg;
+    assign cfu.req_cfu_csr = is_cfu_csr_reg;
     always_ff @(posedge clk) begin
-		if (issue_stage_ready) begin
-            cfu_imm_type <= opcode_trim inside {CUSTOM_1_T} & is_cfu;
-			is_cfu_csr_reg <= is_cfu_csr;
-		end
+      if (issue_stage_ready) begin 
+        cfu_imm_type <= opcode_trim inside {CUSTOM_1_T} & is_cfu; 
+        is_cfu_csr_reg <= is_cfu_csr;
+      end
     end
 
     ////////////////////////////////////////////////////

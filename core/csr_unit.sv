@@ -74,7 +74,7 @@ module csr_unit
         input interrupt_t m_interrupt,
         
         //CFU
-        cfu_interface.csr cfu
+        cfu_interface cfu
         );
 
     logic busy;

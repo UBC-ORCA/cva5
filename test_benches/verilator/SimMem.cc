@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include "SimMem.h"
+#include <cstdint>
 
 
 
