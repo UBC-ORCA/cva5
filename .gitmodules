@@ -1,0 +1,3 @@
+[submodule "rvv-lite"]
+	path = rvv-lite
+	url = git@github.com:UBC-ORCA/rvv-lite.git
