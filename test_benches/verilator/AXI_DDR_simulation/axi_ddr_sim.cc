@@ -299,7 +299,7 @@ void axi_ddr_sim::handle_write_req(){
             //If the Write is done
             if(current_write_parameters.number_of_bursts_left == 0){
                 AXI_write_response_channel_signals resp_elem;
-                resp_elem.bid = elem.wid;
+                resp_elem.bid = wr_ad_channel_queue.front().awid;
                 resp_elem.bresp = 0;
                 wr_ad_channel_queue.pop();
                 order_queue.pop();
