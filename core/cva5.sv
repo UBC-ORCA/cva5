@@ -186,7 +186,6 @@ module cva5
     logic interrupt_pending;
 
     logic processing_csr;
-    logic processing_cfu;
 
     //Decode Unit and Fetch Unit
     logic illegal_instruction;
@@ -547,17 +546,15 @@ module cva5
         );
     end endgenerate
 
+    logic cfu_wb;
 
-    assign {unit_wb[UNIT_IDS.CFU].phys_addr, unit_wb[UNIT_IDS.CFU].id} = cfu.resp_id;
+    assign {cfu_wb, unit_wb[UNIT_IDS.CFU].phys_addr, unit_wb[UNIT_IDS.CFU].id} = cfu.resp_id;
     assign unit_wb[UNIT_IDS.CFU].rd = cfu.resp_data;
-    assign unit_wb[UNIT_IDS.CFU].done = cfu.resp_valid;
-    assign cfu.resp_ready = 1; 
-    //assign cfu.resp_ready = unit_wb[UNIT_IDS.CFU].ack; 
-    assign unit_issue[UNIT_IDS.CFU].ready = cfu.req_ready;
+    assign unit_wb[UNIT_IDS.CFU].done = cfu.resp_valid & cfu_wb;
 
-    // FIXME : Speculative execution
-    assign processing_cfu = ~cfu.req_ready | cfu.req_valid;
-    
+    assign unit_issue[UNIT_IDS.CFU].ready = cfu.req_ready & (issue.id == retire_ids[0]);
+    assign cfu.resp_ready = 1;
+
     ////////////////////////////////////////////////////
     //Writeback
     //First writeback port: ALU

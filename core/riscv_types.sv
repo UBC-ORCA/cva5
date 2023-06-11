@@ -63,6 +63,9 @@ package riscv_types;
         VALU_CFG_T = 5'b10101
     } opcodes_trimmed_t;
 
+    localparam VW_XF_UNARY0_fn6 = 6'b010000;
+    localparam V_LS_SE_mop = 2'b10;
+
     typedef enum logic [2:0] {
         OPIVV_fn3 = 3'b000,
         OPFVV_fn3 = 3'b001,
@@ -205,8 +208,8 @@ package riscv_types;
         DPC = 12'h7B1,
         DSCRATCH = 12'h7B2,
 
-		//CFU CSRS
-		CUSTOM_URW_CSR = 12'h8??
+        //CFU CSRS
+        CUSTOM_URW_CSR = 12'h8??
 
     } csr_reg_addr_t;
 

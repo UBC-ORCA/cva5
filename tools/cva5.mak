@@ -53,14 +53,14 @@ CFLAGS = -g0 -O3 -std=c++14 -march=native -D$(ddr_size_def) -D$(page_size_def) -
 
 #Verilator
 ################################################################################
-VERILATOR_LINT_IGNORE= -Wno-LITENDIAN -Wno-SYMRSVDWORD
+VERILATOR_LINT_IGNORE= -Wno-LITENDIAN -Wno-SYMRSVDWORD -Wno-WIDTH -Wno-IMPLICIT -Wno-REDEFMACRO -Wno-CASEINCOMPLETE -Wno-SELRANGE -Wno-UNOPTFLAT -Wno-TIMESCALEMOD -Wno-INITIALDLY
 ifeq ($(TRACE_ENABLE), True)
 	VERILATOR_CFLAGS =  --trace-fst --trace-structs --CFLAGS "$(CFLAGS)  -D TRACE_ON"
 else
 	VERILATOR_CFLAGS =   --CFLAGS  "$(CFLAGS)"
 endif
 
-VERILATOR_LINT_IGNORE= -Wno-LITENDIAN -Wno-SYMRSVDWORD
+VERILATOR_LINT_IGNORE= -Wno-LITENDIAN -Wno-SYMRSVDWORD -Wno-WIDTH -Wno-IMPLICIT -Wno-REDEFMACRO -Wno-CASEINCOMPLETE -Wno-SELRANGE -Wno-UNOPTFLAT -Wno-TIMESCALEMOD -Wno-INITIALDLY
 
 #(to-do)
 #ifeq ($(LOAD_DDR_FROM_FILE), True)

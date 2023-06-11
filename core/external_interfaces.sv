@@ -20,49 +20,55 @@
  *             Eric Matthews <ematthew@sfu.ca>
  */
 
-interface axi_interface;
-    import cva5_config::*;
+interface axi_interface #(
+      parameter int unsigned ADDR_WIDTH = 32,
+      parameter int unsigned DATA_WIDTH = 32,
+      parameter int unsigned ID_WIDTH   = 6
+    );
+    /* import cva5_config::*; */
 
+    //read channel
+    //read address
     logic arready;
     logic arvalid;
-    logic [C_M_AXI_ADDR_WIDTH-1:0] araddr;
+    logic [ADDR_WIDTH-1:0] araddr;
     logic [7:0] arlen;
     logic [2:0] arsize;
     logic [1:0] arburst;
     logic [3:0] arcache;
-    logic [5:0] arid;
+    logic [ID_WIDTH-1:0] arid;
 
     //read data
     logic rready;
     logic rvalid;
-    logic [C_M_AXI_DATA_WIDTH-1:0] rdata;
+    logic [DATA_WIDTH-1:0] rdata;
     logic [1:0] rresp;
     logic rlast;
-    logic [5:0] rid;
+    logic [ID_WIDTH-1:0] rid;
 
     //Write channel
     //write address
     logic awready;
     logic awvalid;
-    logic [C_M_AXI_ADDR_WIDTH-1:0] awaddr;
+    logic [ADDR_WIDTH-1:0] awaddr;
     logic [7:0] awlen;
     logic [2:0] awsize;
     logic [1:0] awburst;
     logic [3:0] awcache;
-    logic [5:0] awid;
+    logic [ID_WIDTH-1:0] awid;
 
     //write data
     logic wready;
     logic wvalid;
-    logic [C_M_AXI_DATA_WIDTH-1:0] wdata;
-    logic [(C_M_AXI_DATA_WIDTH/8)-1:0] wstrb;
+    logic [DATA_WIDTH-1:0] wdata;
+    logic [(DATA_WIDTH/8)-1:0] wstrb;
     logic wlast;
 
     //write response
     logic bready;
     logic bvalid;
     logic [1:0] bresp;
-    logic [5:0] bid;
+    logic [ID_WIDTH-1:0] bid;
 
     modport master (input arready, rvalid, rdata, rresp, rlast, rid, awready, wready, bvalid, bresp, bid,
             output arvalid, araddr, arlen, arsize, arburst, arcache, arid, rready, awvalid, awaddr, awlen, awsize, awburst, awcache, awid,
@@ -171,49 +177,6 @@ interface l1_arbiter_return_interface;
 `ifdef __CVA5_FORMAL__
     modport formal (input inv_addr, inv_valid, data, data_valid, inv_ack);
 `endif
-
-endinterface
-
-interface cfu_interface
-    import cfu_types::*;
-    #(
-      parameter cfu_config_t CFU_CONFIG = DEFAULT_CFU_CONFIG
-    );
-
-    `define NON_NEG_MSG( WIDTH ) ( ( WIDTH != 0 ) ? ( ( WIDTH ) - 1 ) : ( 0 ) )
-    logic                                         req_en;
-    logic                                         req_valid;
-    logic                                         req_ready;
-    logic                                         req_cfu_csr;
-    logic [`NON_NEG_MSG(CFU_CONFIG.REQ_ID_W):0]   req_id;
-    logic [`NON_NEG_MSG(CFU_CONFIG.CFU_ID_W):0]   req_cfu;
-    logic [`NON_NEG_MSG(CFU_CONFIG.STATE_ID_W):0] req_state;
-    logic [`NON_NEG_MSG(CFU_CONFIG.FUNC_ID_W):0]  req_func;
-    logic [`NON_NEG_MSG(CFU_CONFIG.INSN_W):0]     req_insn;
-    logic [`NON_NEG_MSG(CFU_CONFIG.DATA_W):0]     req_data0;
-    logic [`NON_NEG_MSG(CFU_CONFIG.DATA_W):0]     req_data1;
-    logic                                         resp_valid;
-    logic                                         resp_ready;
-    logic [`NON_NEG_MSG(CFU_CONFIG.REQ_ID_W):0]   resp_id;
-    logic [`NON_NEG_MSG(CFU_CONFIG.STATUS_W):0]   resp_status;
-    logic [`NON_NEG_MSG(CFU_CONFIG.DATA_W):0]     resp_data;
-
-    //TODO
-    /*
-    modport csr        (input   resp_valid, resp_status,
-                        output  req_en, req_cfu, req_state);
-    modport issue      (input   req_en, req_ready,
-                        output  req_valid, req_id, req_func, req_insn, req_data0, req_data1, req_cfu_csr);
-    modport writeback  (input   resp_valid, resp_id, resp_data,
-                        output  resp_ready);
-    */
-                        
-    modport master (input   resp_valid, req_ready, resp_id, resp_status, resp_data,
-                    output  req_valid, resp_ready, req_id, req_cfu, req_state, req_func, 
-                            req_insn, req_data0, req_data1, req_cfu_csr);
-    modport slave  (output  resp_valid, req_ready, resp_id, resp_status, resp_data, 
-                    input   req_valid, resp_ready, req_id, req_cfu, req_state, req_func, 
-                            req_insn, req_data0, req_data1, req_cfu_csr);
 
 endinterface
 

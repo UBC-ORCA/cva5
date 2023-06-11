@@ -26,6 +26,7 @@ module decode_and_issue
     import riscv_types::*;
     import cva5_types::*;
     import csr_types::*;
+    import cfu_types::*;
 
     # (
         parameter cpu_config_t CONFIG = EXAMPLE_CONFIG,
@@ -81,10 +82,14 @@ module decode_and_issue
     logic [2:0] fn3;
     logic [6:0] opcode;
     logic [4:0] opcode_trim;
-	logic [11:0] csr_addr;
+    logic [11:0] csr_addr;
 
     logic uses_rs [REGFILE_READ_PORTS];
     logic uses_rd;
+
+    ///////////////////////////////////////
+    // VFU
+    logic is_vfu;
     logic vfu_uses_rs [REGFILE_READ_PORTS];
     logic vfu_uses_rd;
 
@@ -92,9 +97,8 @@ module decode_and_issue
     rs_addr_t rd_addr;
 
     logic is_csr;
-	logic is_cfu_csr;
+    logic is_cfu_csr; // NOTE: Use?
     logic is_cfu;
-    logic is_vfu;
     logic is_fence;
     logic is_ifence;
     logic csr_imm_op;
@@ -136,12 +140,13 @@ module decode_and_issue
     assign opcode = decode.instruction[6:0];
     assign opcode_trim = opcode[6:2];
     assign fn3 = decode.instruction[14:12];
-	assign csr_addr = decode.instruction[31:20];
+    assign fn6 = decode.instruction[31:26];
+    assign csr_addr = decode.instruction[31:20];
     assign rs_addr[RS1] = decode.instruction[19:15];
     assign rs_addr[RS2] = decode.instruction[24:20];
     assign rd_addr = decode.instruction[11:7];
 
-	assign is_cfu_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & (csr_addr inside {CUSTOM_URW_CSR});
+    assign is_cfu_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & (csr_addr inside {CUSTOM_URW_CSR});
     assign is_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & ~is_cfu_csr;
     assign is_cfu = (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T, CUSTOM_2_T} | is_cfu_csr) & cfu.req_en;
     assign is_vfu = opcode_trim inside {VALU_CFG_T, VLOAD_T, VSTORE_T} & cfu.req_en;
@@ -160,17 +165,18 @@ module decode_and_issue
     assign vfu_uses_rs[RS1] = is_vfu & (opcode_trim inside {VLOAD_T, VSTORE_T} |
                                         (opcode_trim inside {VALU_CFG_T} &
                                           ((fn3 inside {OPIVX_fn3, OPFVF_fn3, OPMVX_fn3}) | 
-                                             (fn3 inside {OPCFG_fn3} & ((decode.instruction[31] == 1'h1) | 
-                                                                         (decode.instruction[31:30] == 2'h2))))));
+                                             (fn3 inside {OPCFG_fn3} & ((decode.instruction[31] == 1'b0) | 
+                                                                        (decode.instruction[31:25] == 7'b1000000))))));
     // rs2  : VMEM [strided] - VALU_CFG_T [ OPCFG (vsetvl) ]
     assign vfu_uses_rs[RS2] = is_vfu & ((opcode_trim inside {VLOAD_T, VSTORE_T} & 
-                                            (decode.instruction[27:26] == 2'h2)) | 
+                                            (decode.instruction[27:26] == V_LS_SE_mop)) | 
                                           (opcode_trim inside {VALU_CFG_T} & 
                                             (fn3 inside {OPCFG_fn3} & 
-                                              (decode.instruction[31:30] == 2'h2))));
+                                              (decode.instruction[31:25] == 7'b1000000))));
+
     // rd   : VALU_CFG_T [ OPFVV (vfmv.f.s) | OPMVV (vmv.x.s, vfirst.m, vcpop.m) | OPMVX () | OPCFG (all) ]
-    assign vfu_uses_rd = is_vfu & ((fn3 inside {OPFVV_fn3, OPMVV_fn3} & (decode.instruction[31:26] == 6'h10)) |
-                                     (fn3 inside {OPCFG_fn3}));
+    assign vfu_uses_rd = is_vfu & ((fn3 inside {OPFVV_fn3, OPMVV_fn3} & (fn6 == VW_XF_UNARY0_fn6)) | (fn3 inside {OPCFG_fn3}));
+
     ////////////////////////////////////////////////////
     //Unit Determination
     assign unit_needed[UNIT_IDS.BR] = opcode_trim inside {BRANCH_T, JAL_T, JALR_T};
@@ -558,19 +564,21 @@ module decode_and_issue
     ////////////////////////////////////////////////////
     //CFU
     logic cfu_imm_type;
-    logic is_cfu_csr_reg;
+    logic is_cfu_csr_r;
+
     // TODO : Drive zero-width output to 0 : req_cfu-id-insn-state
-    assign cfu.req_id    = 9'({issue.phys_rd_addr, issue.id});
-    assign cfu.req_func  = {issue.instruction[31:25], issue.instruction[14:12]};
-    assign cfu.req_insn  = issue.instruction; // if not CFU, req_insn = 0
+    assign cfu.req_id    = 10'({issue.uses_rd, issue.phys_rd_addr, issue.id});
+    assign cfu.req_func  = cfu_imm_type ? (C_M_CFU_FUNC_ID_W)'({issue.instruction[31:25], issue.instruction[14:12]}) : (C_M_CFU_FUNC_ID_W)'(issue.instruction[23:20]);
+    assign cfu.req_insn  = issue.instruction; // TODO : if not CFU, req_insn = 0
     assign cfu.req_data0 = rf.data[RS1];
-    assign cfu.req_data1 = (~is_vfu & cfu_imm_type) ? 32'(issue.instruction[31:24]) : rf.data[RS2];
+    assign cfu.req_data1 = cfu_imm_type ? 32'(issue.instruction[31:24]) : rf.data[RS2];
     assign cfu.req_valid = unit_issue[UNIT_IDS.CFU].new_request;
-    assign cfu.req_cfu_csr = is_cfu_csr_reg;
+    assign cfu.req_cfu_csr = is_cfu_csr_r;
+    
     always_ff @(posedge clk) begin
       if (issue_stage_ready) begin 
         cfu_imm_type <= opcode_trim inside {CUSTOM_1_T} & is_cfu; 
-        is_cfu_csr_reg <= is_cfu_csr;
+        is_cfu_csr_r <= is_cfu_csr;
       end
     end
 

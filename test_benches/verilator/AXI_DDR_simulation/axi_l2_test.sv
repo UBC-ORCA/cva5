@@ -57,7 +57,7 @@ module axi_l2_test # (
         output logic [3:0]ddr_axi_awregion,
         output logic [2:0]ddr_axi_awsize,
         output logic ddr_axi_awvalid,
-        output logic [5:0]ddr_axi_bid,
+        input logic [5:0]ddr_axi_bid,
         output logic ddr_axi_bready,
         input logic [1:0]ddr_axi_bresp,
         input logic ddr_axi_bvalid,

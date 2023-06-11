@@ -26,7 +26,7 @@ package cfu_types;
     } cfu_config_t;
 
     localparam cfu_config_t DEFAULT_CFU_CONFIG = '{
-      REQ_ID_W      : 9, // FIXME 0 instead
+      REQ_ID_W      : 10, // FIXME 0 instead
       CFU_ID_W      : 8,  // FIXME 0 instead
       STATE_ID_W    : 8,  // FIXME 0 instead
       FUNC_ID_W     : 10,
@@ -39,5 +39,18 @@ package cfu_types;
       LATENCY       : 1,
       RESET_LATENCY : 0
     };
+
+    parameter C_M_CFU_REQ_ID_W      = 10;
+    parameter C_M_CFU_CFU_ID_W      = 8;
+    parameter C_M_CFU_STATE_ID_W    = 8;
+    parameter C_M_CFU_FUNC_ID_W     = 10;
+    parameter C_M_CFU_INSN_W        = 32;
+    parameter C_M_CFU_DATA_W        = 32;
+    parameter C_M_CFU_STATUS_W      = 3;
+    parameter C_M_CFU_LI_VERSION    = 32'h010000;
+    parameter C_M_CFU_N_CFUS        = 1;
+    parameter C_M_CFU_N_STATES      = 0;
+    parameter C_M_CFU_LATENCY       = 1;
+    parameter C_M_CFU_RESET_LATENCY = 0;
 
 endpackage
