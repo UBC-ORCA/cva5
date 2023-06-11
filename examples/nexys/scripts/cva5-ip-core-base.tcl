@@ -35,6 +35,8 @@ import_files -norecurse $sources_dir/core/riscv_types.sv
 import_files -norecurse $sources_dir/core/cva5_types.sv
 import_files -norecurse $sources_dir/core/csr_types.sv
 import_files -norecurse $sources_dir/l2_arbiter/l2_config_and_types.sv
+import_files -norecurse $sources_dir/cfu/cfu_types.sv
+import_files -norecurse $sources_dir/cfu/cfu_interface.sv
 
 # Set IP repository paths
 set obj [get_filesets sources_1]
