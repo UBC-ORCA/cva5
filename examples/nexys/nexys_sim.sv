@@ -224,6 +224,9 @@ module cva5_sim
     axi_interface axi ();
     l2_requester_interface l2 ();
 
+    // AXI64
+    axi64_interface axi64 ();
+
     // CFU
     cfu_interface cfu ();
 
@@ -243,102 +246,15 @@ module cva5_sim
     cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*);
 
     /*
-     * CFU CRC
+    * CFU CRC
     crc crc_block(.*);
     */
 
-    ////////////////////////////////////////////////////
-    //VFU
+    /* 
+    * VFU
+    */
+    vfu vfu_block(.*);
 
-    localparam VLEN             = 16384;
-    localparam XLEN             = 32;
-    localparam NUM_VEC          = 32;
-    localparam INSN_WIDTH       = 32;
-    localparam MEM_ADDR_WIDTH   = 32; 
-    localparam MEM_DATA_WIDTH   = 64;
-    localparam DATA_WIDTH       = 64;
-    localparam ID_WIDTH         = 6;
-    localparam FIFO_DEPTH_BITS  = 11;
-    localparam FXP_ENABLE       = 0; // Disable FXP
-
-    logic [ID_WIDTH-1:0] ar_id;
-    logic [3:0] ar_cache;
-    logic [MEM_ADDR_WIDTH-1:0] ar_addr;
-    logic [7:0] ar_len;
-    logic [2:0] ar_size;
-    logic [1:0] ar_burst;
-    logic ar_valid;
-    logic ar_ready;
-    logic [ID_WIDTH-1:0] r_id;
-    logic [DATA_WIDTH-1:0] r_data;
-    logic [1:0] r_resp;
-    logic r_last;
-    logic r_valid;
-    logic r_ready;
-    logic [1:0] aw_burst;
-    logic [2:0] aw_size;
-    logic [3:0] aw_cache;
-    logic [ID_WIDTH-1:0] aw_id;
-    logic [7:0] aw_len;
-    logic [MEM_ADDR_WIDTH-1:0] aw_addr;
-    logic aw_valid;
-    logic aw_ready;
-    logic w_ready;
-    logic w_valid;
-    logic [DATA_WIDTH-1:0] w_data;
-    logic [(DATA_WIDTH/8)-1:0] w_strb;
-    logic w_last;
-    logic b_valid;
-    logic [1:0] b_resp;
-    logic [ID_WIDTH-1:0] b_id;
-    logic b_ready;
-
-    logic [2:0] vxrm;
-    logic req_ready;
-    logic resp_valid;
-
-    rvv_proc_main #(
-      .VLEN(VLEN),
-      .XLEN(XLEN), 
-      .NUM_VEC(NUM_VEC), 
-      .INSN_WIDTH(INSN_WIDTH), 
-      .DATA_WIDTH(DATA_WIDTH), 
-      .MEM_ADDR_WIDTH(MEM_ADDR_WIDTH),
-      .FIFO_DEPTH_BITS(FIFO_DEPTH_BITS),
-      .FXP_ENABLE(FXP_ENABLE)
-      ) 
-      x_rvv_proc_main (
-        .clk(clk), 
-        .rst_n(~rst), 
-        .insn_in(cfu.req_insn), 
-        .insn_valid(cfu.req_valid), 
-        .proc_rdy(req_ready), 
-        .vxrm_in(vxrm),
-        .vexrv_data_in_1(cfu.req_data0), 
-        .vexrv_data_in_2(cfu.req_data1), 
-        .vexrv_data_out(cfu.resp_data), 
-        .vexrv_valid_out(resp_valid),
-        .*
-        );
-
-    assign vxrm = 3'b0; //FIXME VFU CSR
-    assign cfu.req_ready = req_ready;
-    assign cfu.resp_valid = resp_valid;
-
-    //ID FIFO
-    fifo_interface #(.DATA_WIDTH(C_M_CFU_REQ_ID_W)) id_list ();
-
-    cva5_fifo #(.DATA_WIDTH(C_M_CFU_REQ_ID_W), .FIFO_DEPTH(MAX_IDS)) id_list_fifo (
-        .clk (clk),
-        .rst (rst),
-        .fifo (id_list)
-    );
-
-    assign id_list.pop = resp_valid;
-    assign id_list.potential_push = cfu.req_valid;
-    assign id_list.push = id_list.potential_push;
-    assign id_list.data_in = cfu.req_id;
-    assign cfu.resp_id = id_list.data_out;
 
     ////////////////////////////////////////////////////
     //AXI adapter
@@ -574,45 +490,45 @@ module cva5_sim
         );
 
     // Read address channel
-    assign s_axi_arid_adapt = ar_id;
-    assign s_axi_arcache_adapt = ar_cache;
-    assign s_axi_araddr_adapt = ar_addr;
-    assign s_axi_arlen_adapt = ar_len;
-    assign s_axi_arsize_adapt = ar_size;
-    assign s_axi_arburst_adapt = ar_burst;
-    assign s_axi_arvalid_adapt = ar_valid;
-    assign ar_ready = s_axi_arready_adapt;
+    assign s_axi_arid_adapt = axi64.arid;
+    assign s_axi_arcache_adapt = axi64.arcache;
+    assign s_axi_araddr_adapt = axi64.araddr;
+    assign s_axi_arlen_adapt = axi64.arlen;
+    assign s_axi_arsize_adapt = axi64.arsize;
+    assign s_axi_arburst_adapt = axi64.arburst;
+    assign s_axi_arvalid_adapt = axi64.arvalid;
+    assign axi64.arready = s_axi_arready_adapt;
 
     // Read data channel
-    assign r_id = s_axi_rid_adapt;
-    assign r_data = s_axi_rdata_adapt;
-    assign r_resp = s_axi_rresp_adapt;
-    assign r_last = s_axi_rlast_adapt;
-    assign r_valid = s_axi_rvalid_adapt;
-    assign s_axi_rready_adapt = r_ready;
+    assign axi64.rid = s_axi_rid_adapt;
+    assign axi64.rdata = s_axi_rdata_adapt;
+    assign axi64.rresp = s_axi_rresp_adapt;
+    assign axi64.rlast = s_axi_rlast_adapt;
+    assign axi64.rvalid = s_axi_rvalid_adapt;
+    assign s_axi_rready_adapt = axi64.rready;
 
     // Write address channel
-    assign s_axi_awid_adapt = aw_id;
-    assign s_axi_awcache_adapt = aw_cache;
-    assign s_axi_awaddr_adapt = aw_addr;
-    assign s_axi_awlen_adapt = aw_len;
-    assign s_axi_awsize_adapt = aw_size;
-    assign s_axi_awburst_adapt = aw_burst;
-    assign s_axi_awvalid_adapt = aw_valid;
-    assign aw_ready = s_axi_awready_adapt;
+    assign s_axi_awid_adapt = axi64.awid;
+    assign s_axi_awcache_adapt = axi64.awcache;
+    assign s_axi_awaddr_adapt = axi64.awaddr;
+    assign s_axi_awlen_adapt = axi64.awlen;
+    assign s_axi_awsize_adapt = axi64.awsize;
+    assign s_axi_awburst_adapt = axi64.awburst;
+    assign s_axi_awvalid_adapt = axi64.awvalid;
+    assign axi64.awready = s_axi_awready_adapt;
 
     // Write data channel
-    assign s_axi_wvalid_adapt = w_valid;
-    assign s_axi_wdata_adapt = w_data;
-    assign s_axi_wstrb_adapt = w_strb;
-    assign s_axi_wlast_adapt = w_last;
-    assign w_ready = s_axi_wready_adapt;
+    assign s_axi_wvalid_adapt = axi64.wvalid;
+    assign s_axi_wdata_adapt = axi64.wdata;
+    assign s_axi_wstrb_adapt = axi64.wstrb;
+    assign s_axi_wlast_adapt = axi64.wlast;
+    assign axi64.wready = s_axi_wready_adapt;
 
     // Write response channel
-    assign b_id = s_axi_bid_adapt;
-    assign b_resp = s_axi_bresp_adapt;
-    assign b_valid = s_axi_bvalid_adapt;
-    assign s_axi_bready_adapt = b_ready;
+    assign axi64.bid = s_axi_bid_adapt;
+    assign axi64.bresp = s_axi_bresp_adapt;
+    assign axi64.bvalid = s_axi_bvalid_adapt;
+    assign s_axi_bready_adapt = axi64.bready;
 
     ////////////////////////////////////////////////////
     //AXI crossbar
