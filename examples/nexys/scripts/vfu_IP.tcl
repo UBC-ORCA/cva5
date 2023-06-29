@@ -25,14 +25,14 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 }
 
 #import sources needed for blackbox packaging
+import_files -norecurse $sources_dir/core/cva5_config.sv
+import_files -norecurse $sources_dir/core/riscv_types.sv
+import_files -norecurse $sources_dir/core/csr_types.sv
+import_files -norecurse $sources_dir/core/cva5_types.sv
+import_files -norecurse $sources_dir/l2_arbiter/l2_config_and_types.sv
 import_files -norecurse $sources_dir/cfu/cfu_types.sv
 import_files -norecurse $sources_dir/cfu/cfu_interface.sv
 import_files -norecurse $sources_dir/core/external_interfaces.sv
-import_files -norecurse $sources_dir/core/cva5_config.sv
-import_files -norecurse $sources_dir/core/riscv_types.sv
-import_files -norecurse $sources_dir/core/cva5_types.sv
-import_files -norecurse $sources_dir/core/csr_types.sv
-import_files -norecurse $sources_dir/l2_arbiter/l2_config_and_types.sv
 import_files -norecurse $sources_dir/examples/nexys/vfu_wrapper.sv
 
 # Set IP repository paths
@@ -70,15 +70,15 @@ set_property  ip_repo_paths  $sources_dir/${_xil_proj_name_} [current_project]
 current_project $_xil_proj_name_
 update_ip_catalog
 
-import_files -force -fileset [get_filesets sources_1] $sources_dir/cfu/cfu_types.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/cfu/cfu_interface.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/core/cva5_config.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/riscv_types.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/csr_types.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/core/cva5_config.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/cva5_types.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/core/internal_interfaces.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/l2_arbiter/l2_config_and_types.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cfu/cfu_types.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/core/internal_interfaces.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/external_interfaces.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cfu/cfu_interface.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/lfsr.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/lutrams/lutram_1w_1r.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/cva5_fifo.sv

@@ -12,16 +12,50 @@ module vfu
         cfu_interface.slave cfu
     );
 
-    localparam VLEN             = 16384;
-    localparam XLEN             = 32;
-    localparam NUM_VEC          = 32;
-    localparam INSN_WIDTH       = 32;
-    localparam MEM_ADDR_WIDTH   = 32; 
-    localparam MEM_DATA_WIDTH   = 64;
-    localparam DATA_WIDTH       = 64;
-    localparam ID_WIDTH         = 6;
-    localparam FIFO_DEPTH_BITS  = 11;
-    localparam FXP_ENABLE       = 0; // Disable FXP
+    // RVV-LITE
+    localparam VLEN               = 1024;            // vector length in bits
+    localparam VLEN_B             = VLEN >> 3;        // same as VLMAX
+    localparam VLEN_B_BITS        = $clog2(VLEN_B);
+    localparam XLEN               = 32;               // not sure; data width maybe?
+    localparam NUM_VEC            = 32;               // number of available vector registers
+    localparam INSN_WIDTH         = 32;               // width of a single instruction
+    localparam DATA_WIDTH         = 64;
+    localparam DATA_WIDTH_BITS    = $clog2(DATA_WIDTH);
+    localparam DW_B               = DATA_WIDTH>>3;    // DATA_WIDTH in bytes
+    localparam DW_B_BITS          = DATA_WIDTH_BITS-3;
+    localparam ADDR_WIDTH         = 5;                // 5 bits for 32 vector regs
+    localparam MEM_ADDR_WIDTH     = 32;               // We need to get this from VexRiscV
+    localparam MEM_DATA_WIDTH     = DATA_WIDTH;
+    localparam MEM_DW_B           = MEM_DATA_WIDTH>>3;
+    localparam VEX_DATA_WIDTH     = 32;
+    localparam FIFO_DEPTH_BITS    = 11;
+    localparam BYTE               = 8;
+    localparam OFF_BITS           = $clog2(VLEN/DATA_WIDTH); // max value is 256 (16384/64)
+
+    localparam ENABLE_64_BIT      = 1;
+    localparam AND_OR_XOR_ENABLE  = 1;
+    localparam ADD_SUB_ENABLE     = 1;
+    localparam MIN_MAX_ENABLE     = 0;
+    localparam MASK_ENABLE        = 0;
+    localparam VEC_MOVE_ENABLE    = 1;
+    localparam WHOLE_REG_ENABLE   = 1;
+    localparam SLIDE_ENABLE       = 0;
+    localparam WIDEN_ADD_ENABLE   = 1;
+    localparam REDUCTION_ENABLE   = 0;
+    localparam MULT_ENABLE        = 1;
+    localparam SHIFT_ENABLE       = 1;
+    localparam MULH_SR_ENABLE     = 1;
+    localparam MULH_SR_32_ENABLE  = 1;
+    localparam WIDEN_MUL_ENABLE   = 1;
+    localparam NARROW_ENABLE      = 1;
+    localparam SLIDE_N_ENABLE     = 0;
+    localparam MULT64_ENABLE      = 0;
+    localparam SHIFT64_ENABLE     = 0;
+    localparam FXP_ENABLE         = 0;
+    localparam MASK_ENABLE_EXT    = 0;
+    localparam EN_128_MUL         = 0;
+    
+    localparam ID_WIDTH           = 6;
 
     logic [ID_WIDTH-1:0] ar_id;
     logic [3:0] ar_cache;
@@ -59,15 +93,48 @@ module vfu
     logic req_ready;
     logic resp_valid;
 
+
     rvv_proc_main #(
       .VLEN(VLEN),
-      .XLEN(XLEN), 
-      .NUM_VEC(NUM_VEC), 
-      .INSN_WIDTH(INSN_WIDTH), 
-      .DATA_WIDTH(DATA_WIDTH), 
+      .VLEN_B(VLEN_B),
+      .VLEN_B_BITS(VLEN_B_BITS),
+      .XLEN(XLEN),
+      .NUM_VEC(NUM_VEC),
+      .INSN_WIDTH(INSN_WIDTH),
+      .DATA_WIDTH(DATA_WIDTH),
+      .DATA_WIDTH_BITS(DATA_WIDTH_BITS),
+      .DW_B(DW_B),
+      .DW_B_BITS(DW_B_BITS),
+      .ADDR_WIDTH(ADDR_WIDTH),
       .MEM_ADDR_WIDTH(MEM_ADDR_WIDTH),
+      .MEM_DATA_WIDTH(MEM_DATA_WIDTH),
+      .MEM_DW_B(MEM_DW_B),
+      .VEX_DATA_WIDTH(VEX_DATA_WIDTH),
       .FIFO_DEPTH_BITS(FIFO_DEPTH_BITS),
-      .FXP_ENABLE(FXP_ENABLE)
+      .BYTE(BYTE),
+      .OFF_BITS(OFF_BITS),
+      .ENABLE_64_BIT(ENABLE_64_BIT),
+      .AND_OR_XOR_ENABLE(AND_OR_XOR_ENABLE),
+      .ADD_SUB_ENABLE(ADD_SUB_ENABLE),
+      .MIN_MAX_ENABLE(MIN_MAX_ENABLE),
+      .MASK_ENABLE(MASK_ENABLE),
+      .VEC_MOVE_ENABLE(VEC_MOVE_ENABLE),
+      .WHOLE_REG_ENABLE(WHOLE_REG_ENABLE),
+      .SLIDE_ENABLE(SLIDE_ENABLE),
+      .WIDEN_ADD_ENABLE(WIDEN_ADD_ENABLE),
+      .REDUCTION_ENABLE(REDUCTION_ENABLE),
+      .MULT_ENABLE(MULT_ENABLE),
+      .SHIFT_ENABLE(SHIFT_ENABLE),
+      .MULH_SR_ENABLE(MULH_SR_ENABLE),
+      .MULH_SR_32_ENABLE(MULH_SR_32_ENABLE),
+      .WIDEN_MUL_ENABLE(WIDEN_MUL_ENABLE),
+      .NARROW_ENABLE(NARROW_ENABLE),
+      .SLIDE_N_ENABLE(SLIDE_N_ENABLE),
+      .MULT64_ENABLE(MULT64_ENABLE),
+      .SHIFT64_ENABLE(SHIFT64_ENABLE),
+      .FXP_ENABLE(FXP_ENABLE),
+      .MASK_ENABLE_EXT(MASK_ENABLE_EXT),
+      .EN_128_MUL(EN_128_MUL)
       ) 
       rvv_proc_main_block (
         .clk(clk), 
