@@ -7,6 +7,11 @@ module vfu
     (
         input logic clk,
         input logic rst,
+
+        // INVALIDATION
+        input  logic inv_ack,
+        output logic inv_valid,
+        output logic [32-1:0] inv_addr,
         
         axi64_interface.master axi64,
         cfu_interface.slave cfu

@@ -129,6 +129,7 @@ if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
 user:user:CVA5:1.0\
 user:user:VFU:1.0\
+xilinx.com:ip:system_ila:1.1\
 xilinx.com:ip:axi_gpio:2.0\
 xilinx.com:ip:axi_uart16550:2.0\
 xilinx.com:ip:clk_wiz:6.0\
@@ -368,8 +369,28 @@ proc create_root_design { parentCell } {
   # Create instance: CVA5_0, and set properties
   set CVA5_0 [ create_bd_cell -type ip -vlnv user:user:CVA5:1.0 CVA5_0 ]
 
-  # Create instance: CVA5_0, and set properties
+  # Create instance: VFU_0, and set properties
   set VFU_0 [ create_bd_cell -type ip -vlnv user:user:VFU:1.0 VFU_0 ]
+  #
+  # Create instance: system_ila_0, and set properties
+  set system_ila_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:system_ila:1.1 system_ila_0 ]
+  set_property -dict [list CONFIG.C_SLOT_0_AXI_ID_WIDTH.VALUE_SRC USER CONFIG.C_SLOT_0_AXI_DATA_WIDTH.VALUE_SRC USER CONFIG.C_SLOT_0_AXI_ADDR_WIDTH.VALUE_SRC USER CONFIG.C_SLOT_1_AXI_ID_WIDTH.VALUE_SRC USER CONFIG.C_SLOT_1_AXI_DATA_WIDTH.VALUE_SRC USER CONFIG.C_SLOT_1_AXI_ADDR_WIDTH.VALUE_SRC USER] [get_bd_cells system_ila_0 ] 
+
+  set_property -dict [list \
+  CONFIG.C_ADV_TRIGGER {true} \
+  CONFIG.C_EN_STRG_QUAL {1} \
+  CONFIG.C_NUM_MONITOR_SLOTS {3} \
+  CONFIG.C_SLOT {0} \
+  CONFIG.C_SLOT_0_APC_EN {1} \
+  CONFIG.C_SLOT_0_AXI_ADDR_WIDTH {32} \
+  CONFIG.C_SLOT_0_AXI_DATA_WIDTH {32} \
+  CONFIG.C_SLOT_0_AXI_ID_WIDTH {6} \
+  CONFIG.C_SLOT_1_APC_EN {1} \
+  CONFIG.C_SLOT_1_AXI_ADDR_WIDTH {32} \
+  CONFIG.C_SLOT_1_AXI_DATA_WIDTH {64} \
+  CONFIG.C_SLOT_1_AXI_ID_WIDTH {6} \
+  CONFIG.C_SLOT_2_APC_EN {1} \
+] [get_bd_cells system_ila_0]
 
   # Create instance: axi_gpio_0, and set properties
   set axi_gpio_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_gpio_0 ]
@@ -478,7 +499,7 @@ proc create_root_design { parentCell } {
   connect_bd_net -net sys_clock_1 [get_bd_ports sys_clock] [get_bd_pins clk_wiz_0/clk_in1]
   connect_bd_net -net xlslice_0_Dout [get_bd_pins CVA5_0/rst] [get_bd_pins VFU_0/rst] [get_bd_pins xlslice_0/Dout]
 
-  #connect_bd_net -net cfu_req_en_0 [get_bd_pins CVA5_0/cfu_req_en] [get_bd_pins VFU_0/cfu_req_en]
+  connect_bd_net -net cfu_req_en_0 [get_bd_pins CVA5_0/cfu_req_en] [get_bd_pins VFU_0/cfu_req_en]
   connect_bd_net -net cfu_req_cfu_csr_0 [get_bd_pins CVA5_0/cfu_req_cfu_csr] [get_bd_pins VFU_0/cfu_req_cfu_csr]
   connect_bd_net -net cfu_req_valid_0 [get_bd_pins CVA5_0/cfu_req_valid] [get_bd_pins VFU_0/cfu_req_valid]
   connect_bd_net -net cfu_req_ready_0 [get_bd_pins CVA5_0/cfu_req_ready] [get_bd_pins VFU_0/cfu_req_ready]
@@ -494,6 +515,16 @@ proc create_root_design { parentCell } {
   connect_bd_net -net cfu_resp_id_0 [get_bd_pins CVA5_0/cfu_resp_id] [get_bd_pins VFU_0/cfu_resp_id]
   connect_bd_net -net cfu_resp_status_0 [get_bd_pins CVA5_0/cfu_resp_status] [get_bd_pins VFU_0/cfu_resp_status]
   connect_bd_net -net cfu_resp_data_0 [get_bd_pins CVA5_0/cfu_resp_data] [get_bd_pins VFU_0/cfu_resp_data]
+
+  connect_bd_net [get_bd_pins CVA5_0/inv_ack] [get_bd_pins VFU_0/inv_ack]
+  connect_bd_net [get_bd_pins CVA5_0/inv_valid] [get_bd_pins VFU_0/inv_valid]
+  connect_bd_net [get_bd_pins CVA5_0/inv_addr] [get_bd_pins VFU_0/inv_addr]
+
+  connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_0_AXI] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
+  connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_1_AXI] [get_bd_intf_pins VFU_0/m_axi]
+  connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_2_AXI] [get_bd_intf_pins mig_7series_0/S_AXI]
+  connect_bd_net [get_bd_pins system_ila_0/clk] [get_bd_pins mig_7series_0/ui_clk]
+  connect_bd_net [get_bd_pins system_ila_0/resetn] [get_bd_pins xlslice_0/Dout]
 
   # Create address segments
   assign_bd_address -offset 0x88100000 -range 0x00010000 -target_address_space [get_bd_addr_spaces CVA5_0/m_axi] [get_bd_addr_segs axi_gpio_0/S_AXI/Reg] -force

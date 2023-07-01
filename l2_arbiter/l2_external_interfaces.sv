@@ -44,6 +44,7 @@ interface l2_requester_interface;
     logic [31:0] wr_data;
     logic wr_data_push;
     logic data_full;
+    logic wr_in_flight;
 
     logic [31:0] rd_data;
     logic [L2_SUB_ID_W-1:0] rd_sub_id;
@@ -54,14 +55,14 @@ interface l2_requester_interface;
             output request_push, input request_full,
             input inv_addr, inv_valid, output  inv_ack,
             input con_result, con_valid,
-            output wr_data, wr_data_push, input data_full,
+            output wr_data, wr_data_push, input data_full, wr_in_flight,
             input rd_data, rd_sub_id, rd_data_valid, output rd_data_ack);
 
     modport slave (input addr, be, rnw, is_amo, amo_type_or_burst_size, sub_id,
             input request_push, output request_full,
             output inv_addr, inv_valid, input  inv_ack,
             output con_result, con_valid,
-            input wr_data, wr_data_push, output data_full,
+            input wr_data, wr_data_push, output data_full, wr_in_flight,
             output rd_data, rd_sub_id, rd_data_valid, input rd_data_ack);
 
 `ifdef __CVA5_FORMAL__

@@ -30,6 +30,11 @@ module l1_to_axi
     (
         input logic clk,
         input logic rst,
+        
+        // INVALIDATION
+        output logic inv_ack,
+        input  logic inv_valid,
+        input  logic [32-1:0] inv_addr,
 
         l2_requester_interface.slave cpu,
         axi_interface.master axi
@@ -103,7 +108,7 @@ module l1_to_axi
     assign axi.arburst = (burst_size !=0) ? 2'b01 : '0;// INCR
     assign axi.rready = 1; //always ready to receive data
     assign axi.arsize = 3'b010;//4 bytes
-    assign axi.arcache = 4'b0011; //Normal Non-cacheable Non-bufferable
+    assign axi.arcache = 4'b0010; //Normal Non-cacheable Non-bufferable
     assign axi.arid = 6'(request.sub_id);
 
     assign axi.araddr = {request.addr, 2'b00} & {25'h1FFFFFF, ~burst_size, 2'b00};
@@ -116,7 +121,7 @@ module l1_to_axi
     assign axi.awburst = '0;//2'b01;// INCR
     assign axi.awsize = 3'b010;//4 bytes
     assign axi.bready = 1;
-    assign axi.awcache = 4'b0011;//Normal Non-cacheable Non-bufferable
+    assign axi.awcache = 4'b0010;//Normal Non-cacheable Non-bufferable
     assign axi.awaddr = {request.addr, 2'b00};
     assign axi.awid = 6'(request.sub_id);
 
@@ -152,6 +157,12 @@ module l1_to_axi
     end
     
     assign write_pop = (aw_complete | aw_complete_r) & (w_complete | w_complete_r);
+
+    assign cpu.wr_in_flight = write_in_flight_count != 0;
+
+    assign cpu.inv_valid = inv_valid;
+    assign cpu.inv_addr  = inv_addr[32-1:2];
+    assign inv_ack = cpu.inv_ack;
 
     ////////////////////////////////////////////////////
     //Return Path

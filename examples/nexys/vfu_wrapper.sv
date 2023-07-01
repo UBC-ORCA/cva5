@@ -45,6 +45,11 @@ import cfu_types::*;
   input  logic m_axi_bvalid,
   input  logic [1:0] m_axi_bresp,
   input  logic [5:0] m_axi_bid,
+  
+  // INVALIDATION
+  input  logic inv_ack,
+  output logic inv_valid,
+  output logic [32-1:0] inv_addr,
 
   // CFU
   input  logic                          cfu_req_en,
