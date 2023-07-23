@@ -10,7 +10,10 @@ module sum0
   input logic clk,
   input logic rst,
 
-  cfu_interface.slave cfu
+  input logic [7:0] req_data0,
+  input logic [7:0] req_data1,
+  output logic [31:0] ssha256_sum0
+
   );
 
 //
@@ -20,41 +23,11 @@ module sum0
 `define ROR32(a,b) ((a >> b) | (a << 32-b))
 `define SRL32(a,b) ((a >> b))
 
-  logic req_ready;
-  logic resp_valid;
-
   logic [31:0] ssha256_sum0;
 
 
-  assign ssha256_sum0 = `ROR32(rs1, 2) ^ `ROR32(rs1,13) ^ `ROR32(rs1,22);
+  assign ssha256_sum0 = `ROR32(req_data0, 2) ^ `ROR32(req_data0,13) ^ `ROR32(req_data0,22);
 
-
-  always_ff @(posedge clk) begin
-    if (cfu.req_valid & req_ready) begin
-      cfu.resp_id     <= cfu.req_id;
-      cfu.resp_status <= 0;
-      cfu.resp_data   <= ssha256_sum0;
-    end
-  end
-
-  set_clr_reg_with_rst #(.SET_OVER_CLR(0), .WIDTH(1), .RST_VALUE(1)) x_req_ready (
-    .clk, 
-    .rst,
-    .set(resp_valid & cfu.resp_ready),
-    .clr(cfu.req_valid & req_ready),
-    .result(req_ready)
-  );
-
-  set_clr_reg_with_rst #(.SET_OVER_CLR(1), .WIDTH(1), .RST_VALUE(0)) x_resp_valid (
-    .clk, 
-    .rst,
-    .set(cfu.req_valid & req_ready),
-    .clr(cfu.resp_ready),
-    .result(resp_valid)
-  );
-
-  assign cfu.req_ready = req_ready;
-  assign cfu.resp_valid = resp_valid;
 
   //
   // Clean up macro definitions
