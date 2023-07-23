@@ -17,8 +17,8 @@ module crc
   // Needs to be changed for each user
   initial $readmemh("C:/D/cva5pr/cva5/cfu/crc_rom.hex", crc_rom);
 
-  assign crc_rom_index = cfu.req_data1[8-1:0] ^ cfu.req_data0[8-1:0];
+  assign crc_rom_index = req_data1[8-1:0] ^ req_data0[8-1:0];
   assign crc_rom_data  = crc_rom[crc_rom_index];
-  assign crc_result = crc_rom_data ^ (cfu.req_data1 >> 8);
+  assign crc_result = crc_rom_data ^ (req_data1 >> 8);
 
   endmodule
