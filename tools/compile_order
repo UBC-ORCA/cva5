@@ -11,6 +11,11 @@ local_memory/local_mem.sv
 cfu/cfu_types.sv
 cfu/cfu_interface.sv
 cfu/crc.sv
+cfu/sig0.sv
+cfu/sig1.sv
+cfu/sum0.sv
+cfu/sum1.sv
+cfu/cfu.sv
 cfu/cfu_unit.sv
 cfu/mux.sv
 
