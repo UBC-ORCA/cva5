@@ -98,6 +98,11 @@ cfu/cfu_unit.sv
 cfu/mux.sv
 
 cfu/crc.sv
+cfu/sig0.sv
+cfu/sig1.sv
+cfu/sum0.sv
+cfu/sum1.sv
+cfu/cfu.sv
 
 rvv-lite/src/vALU/avg_unit.sv
 rvv-lite/src/vALU/fxp_round.sv

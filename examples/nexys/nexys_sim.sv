@@ -258,7 +258,10 @@ module cva5_sim
     /* 
     * VFU
     */
-    vfu vfu_block(.*);
+    //vfu vfu_block(.*);
+
+     /*cfu block*/
+    cfu cfu_block(.*);
 
 
     ////////////////////////////////////////////////////
