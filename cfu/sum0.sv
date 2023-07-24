@@ -23,8 +23,6 @@ module sum0
 `define ROR32(a,b) ((a >> b) | (a << 32-b))
 `define SRL32(a,b) ((a >> b))
 
-  logic [31:0] ssha256_sum0;
-
 
   assign ssha256_sum0 = `ROR32(req_data0, 2) ^ `ROR32(req_data0,13) ^ `ROR32(req_data0,22);
 

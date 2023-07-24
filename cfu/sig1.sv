@@ -23,8 +23,6 @@ module sig1
 `define ROR32(a,b) ((a >> b) | (a << 32-b))
 `define SRL32(a,b) ((a >> b))
 
-  logic [31:0] ssha256_sig1;
-
 
   assign ssha256_sig1 = `ROR32(req_data0,17) ^ `ROR32(req_data0,19) ^ `SRL32(req_data0,10);
 
