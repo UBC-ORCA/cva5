@@ -568,7 +568,7 @@ module decode_and_issue
 
     // TODO : Drive zero-width output to 0 : req_cfu-id-insn-state
     assign cfu.req_id    = 10'({issue.uses_rd, issue.phys_rd_addr, issue.id});
-    assign cfu.req_func  = cfu_imm_type ? (C_M_CFU_FUNC_ID_W)'({issue.instruction[31:25], issue.instruction[14:12]}) : (C_M_CFU_FUNC_ID_W)'(issue.instruction[23:20]);
+    assign cfu.req_func  = cfu_imm_type ? (C_M_CFU_FUNC_ID_W)'(issue.instruction[23:20]) : (C_M_CFU_FUNC_ID_W)'({issue.instruction[31:25], issue.instruction[14:12]});
     assign cfu.req_insn  = issue.instruction; // TODO : if not CFU, req_insn = 0
     assign cfu.req_data0 = rf.data[RS1];
     assign cfu.req_data1 = cfu_imm_type ? 32'(issue.instruction[31:24]) : rf.data[RS2];
