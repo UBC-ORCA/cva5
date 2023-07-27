@@ -10,8 +10,8 @@ module sig0
   input logic clk,
   input logic rst,
 
-  input logic [7:0] req_data0,
-  input logic [7:0] req_data1,
+  input logic [31:0] req_data0,
+  input logic [31:0] req_data1,
   output logic [31:0] ssha256_sig0
 
   );
