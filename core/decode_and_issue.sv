@@ -148,8 +148,8 @@ module decode_and_issue
 
     assign is_cfu_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & (csr_addr inside {CUSTOM_URW_CSR});
     assign is_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & ~is_cfu_csr;
-    assign is_cfu = (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T, CUSTOM_2_T} | is_cfu_csr) & cfu_req_en;
-    assign is_vfu = opcode_trim inside {VALU_CFG_T, VLOAD_T, VSTORE_T} & cfu_req_en;
+    assign is_cfu = (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T, CUSTOM_2_T} | is_cfu_csr) & cfu.req_en;
+    assign is_vfu = opcode_trim inside {VALU_CFG_T, VLOAD_T, VSTORE_T} & cfu.req_en;
     assign is_fence = (opcode_trim == FENCE_T) & ~fn3[0];
     assign is_ifence = CONFIG.INCLUDE_IFENCE & (opcode_trim == FENCE_T) & fn3[0];
     assign csr_imm_op = (opcode_trim == SYSTEM_T) & fn3[2] & ~is_cfu_csr;
