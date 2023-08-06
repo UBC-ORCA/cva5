@@ -436,7 +436,7 @@ module cva5
         .m_avalon (m_avalon),
         .dwishbone (dwishbone),                                       
         .data_bram (data_bram),
-        .vstore_hold (vstore_hold),
+       // .vstore_hold (vstore_hold),
         .wb_snoop (wb_snoop),
         .retire_ids (retire_ids),
         .retire_port_valid(retire_port_valid),
@@ -553,8 +553,10 @@ module cva5
     assign unit_wb[UNIT_IDS.CFU].rd = cfu.resp_data;
     assign unit_wb[UNIT_IDS.CFU].done = cfu.resp_valid & cfu_wb;
 
+    assign unit_issue[UNIT_IDS.CFU].ready = cfu.req_ready & (issue.id == retire_ids[0]);
     assign cfu.resp_ready = 1;
 
+    /* 
     always_comb begin
       if (cfu.req_id[LOG2_MAX_IDS-1:0] != retire_ids[0]) begin
         unit_issue[UNIT_IDS.CFU].ready = 1'b0;
@@ -583,6 +585,8 @@ module cva5
         vstore_id <= 'b0;
       end
     end
+
+    */
 
     ////////////////////////////////////////////////////
     //Writeback

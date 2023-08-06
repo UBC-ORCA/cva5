@@ -32,9 +32,9 @@ module l1_to_axi
         input logic rst,
         
         // INVALIDATION
-        output logic inv_ack,
-        input  logic inv_valid,
-        input  logic [32-1:0] inv_addr,
+      //  output logic inv_ack,
+       // input  logic inv_valid,
+       // input  logic [32-1:0] inv_addr,
 
         l2_requester_interface.slave cpu,
         axi_interface.master axi
@@ -160,9 +160,11 @@ module l1_to_axi
 
     assign cpu.wr_in_flight = write_in_flight_count != 0;
 
+    /*
     assign cpu.inv_valid = inv_valid;
     assign cpu.inv_addr  = inv_addr[32-1:2];
     assign inv_ack = cpu.inv_ack;
+    */
 
     ////////////////////////////////////////////////////
     //Return Path

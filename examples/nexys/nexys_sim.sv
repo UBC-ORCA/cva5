@@ -159,7 +159,7 @@ module cva5_sim
             LINES : 1024,
             LINE_W : 4,
             WAYS : 1,
-            USE_EXTERNAL_INVALIDATIONS : 1,
+            USE_EXTERNAL_INVALIDATIONS : 0,
             USE_NON_CACHEABLE : 1,
             NON_CACHEABLE : '{
 				L : 32'h88000000, 
@@ -231,9 +231,11 @@ module cva5_sim
     cfu_interface cfu ();
 
     // INVALIDATION
+    /* 
     logic inv_ack;
     logic inv_valid;
     logic [32-1:0] inv_addr;
+    */
 
     assign instruction_bram_addr = instruction_bram.addr;
     assign instruction_bram_en = instruction_bram.en;

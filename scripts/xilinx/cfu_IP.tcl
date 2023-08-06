@@ -123,6 +123,7 @@ import_files -norecurse $origin_dir/../../cfu/sig0.sv -force
 import_files -norecurse $origin_dir/../../cfu/sig1.sv -force
 import_files -norecurse $origin_dir/../../cfu/sum0.sv -force
 import_files -norecurse $origin_dir/../../cfu/sum1.sv -force
+import_files -norecurse $origin_dir/../../cfu/cfu.sv -force
 import_files -norecurse $origin_dir/../../cfu/cfu_wrapper.sv -force
 
 

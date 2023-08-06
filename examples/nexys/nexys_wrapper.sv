@@ -76,9 +76,9 @@ module nexys_wrapper
     input logic [5:0] m_axi_bid,
 
     // INVALIDATION
-    output logic inv_ack,
-    input  logic inv_valid,
-    input  logic [32-1:0] inv_addr,
+ //   output logic inv_ack,
+ //   input  logic inv_valid,
+ //   input  logic [32-1:0] inv_addr,
 
     //cfu interface signals
     output logic                          cfu_req_en,
@@ -157,7 +157,7 @@ module nexys_wrapper
             LINES : 1024,
             LINE_W : 4,
             WAYS : 1,
-            USE_EXTERNAL_INVALIDATIONS : 1,
+            USE_EXTERNAL_INVALIDATIONS : 0,
             USE_NON_CACHEABLE : 1,
             NON_CACHEABLE : '{
                                 L : 32'h88000000, 
