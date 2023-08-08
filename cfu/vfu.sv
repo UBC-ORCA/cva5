@@ -40,25 +40,25 @@ module vfu
     localparam ENABLE_64_BIT      = 1;
     localparam AND_OR_XOR_ENABLE  = 1;
     localparam ADD_SUB_ENABLE     = 1;
-    localparam MIN_MAX_ENABLE     = 0;
-    localparam MASK_ENABLE        = 0;
+    localparam MIN_MAX_ENABLE     = 1;
+    localparam MASK_ENABLE        = 1;
     localparam VEC_MOVE_ENABLE    = 1;
     localparam WHOLE_REG_ENABLE   = 1;
-    localparam SLIDE_ENABLE       = 0;
+    localparam SLIDE_ENABLE       = 1;
     localparam WIDEN_ADD_ENABLE   = 1;
-    localparam REDUCTION_ENABLE   = 0;
+    localparam REDUCTION_ENABLE   = 1;
     localparam MULT_ENABLE        = 1;
     localparam SHIFT_ENABLE       = 1;
     localparam MULH_SR_ENABLE     = 1;
     localparam MULH_SR_32_ENABLE  = 1;
     localparam WIDEN_MUL_ENABLE   = 1;
     localparam NARROW_ENABLE      = 1;
-    localparam SLIDE_N_ENABLE     = 0;
-    localparam MULT64_ENABLE      = 0;
-    localparam SHIFT64_ENABLE     = 0;
-    localparam FXP_ENABLE         = 0;
-    localparam MASK_ENABLE_EXT    = 0;
-    localparam EN_128_MUL         = 0;
+    localparam SLIDE_N_ENABLE     = 1;
+    localparam MULT64_ENABLE      = 1;
+    localparam SHIFT64_ENABLE     = 1;
+    localparam FXP_ENABLE         = 1;
+    localparam MASK_ENABLE_EXT    = 1;
+    localparam EN_128_MUL         = 1;
     
     localparam ID_WIDTH           = 6;
 
@@ -95,9 +95,8 @@ module vfu
     logic b_ready;
 
     logic [2:0] vxrm;
-    logic req_ready;
-    logic resp_valid;
-
+    logic [VEX_DATA_WIDTH-1:0] vexrv_data_out;
+    logic vexrv_valid_out;
 
     rvv_proc_main #(
       .VLEN(VLEN),
@@ -139,25 +138,34 @@ module vfu
       .SHIFT64_ENABLE(SHIFT64_ENABLE),
       .FXP_ENABLE(FXP_ENABLE),
       .MASK_ENABLE_EXT(MASK_ENABLE_EXT),
-      .EN_128_MUL(EN_128_MUL)
-      ) 
-      rvv_proc_main_block (
+      .EN_128_MUL(EN_128_MUL)) 
+    rvv_proc_main_block (
         .clk(clk), 
         .rst_n(~rst), 
         .insn_in(cfu.req_insn), 
         .insn_valid(cfu.req_valid), 
-        .proc_rdy(req_ready), 
+        .proc_rdy(cfu.req_ready), 
         .vxrm_in(vxrm),
         .vexrv_data_in_1(cfu.req_data0), 
         .vexrv_data_in_2(cfu.req_data1), 
-        .vexrv_data_out(cfu.resp_data), 
-        .vexrv_valid_out(resp_valid),
-        .*
-        );
+        .vexrv_data_out(vexrv_data_out), 
+        .vexrv_valid_out(vexrv_valid_out),
+        .*);
 
     assign vxrm = 3'b0; //FIXME VFU CSR
-    assign cfu.req_ready = req_ready;
-    assign cfu.resp_valid = resp_valid;
+
+    always_ff @(posedge clk) begin
+      if (vexrv_valid_out)
+        cfu.resp_data <= vexrv_data_out;
+    end
+
+    set_clr_reg_with_rst #(.SET_OVER_CLR(1), .WIDTH(1), .RST_VALUE(0)) x_resp_valid (
+      .clk, 
+      .rst,
+      .set(vexrv_valid_out),
+      .clr(cfu.resp_ready),
+      .result(cfu.resp_valid)
+    );
 
     ////////////////////////////////////////////////////
     //ID FIFO
@@ -169,8 +177,8 @@ module vfu
         .fifo (id_list)
     );
 
-    assign id_list.pop = resp_valid;
-    assign id_list.potential_push = cfu.req_valid;
+    assign id_list.pop = cfu.resp_valid & cfu.resp_ready;
+    assign id_list.potential_push = cfu.req_valid & cfu.req_ready;
     assign id_list.push = id_list.potential_push;
     assign id_list.data_in = cfu.req_id;
     assign cfu.resp_id = id_list.data_out;
