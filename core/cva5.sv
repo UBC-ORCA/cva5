@@ -553,7 +553,7 @@ module cva5
     assign unit_wb[UNIT_IDS.CFU].rd = cfu.resp_data;
     assign unit_wb[UNIT_IDS.CFU].done = cfu.resp_valid & cfu_wb;
 
-    assign cfu.resp_ready = 1;
+    assign cfu.resp_ready = unit_wb[UNIT_IDS.CFU].done ? unit_wb[UNIT_IDS.CFU].ack : 1'b1;
 
     always_comb begin
       if (cfu.req_id[LOG2_MAX_IDS-1:0] != retire_ids[0]) begin
