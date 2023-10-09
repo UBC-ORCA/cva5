@@ -102,7 +102,14 @@ cfu/sig0.sv
 cfu/sig1.sv
 cfu/sum0.sv
 cfu/sum1.sv
+cfu/ch.sv
+cfu/maj.sv
 cfu/cfu.sv
+cfu/process4.sv
+cfu/wt_calc.sv
+cfu/sha256.sv
+cfu/sha256_top.sv
+cfu/sha256_task.sv
 
 rvv-lite/src/vALU/avg_unit.sv
 rvv-lite/src/vALU/fxp_round.sv

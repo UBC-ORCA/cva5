@@ -1,37 +1,23 @@
-// 
-// Copyright (C) 2020 
-//    SCARV Project  <info@scarv.org>
-//    Ben Marshall   <ben.marshall@bristol.ac.uk>
-//
-// This is a L3 cfu for the S0 function in the nettle-sha256 benchmark 
+//Name: Steven Chin
+//Student ID: 40108540
 
 module sum0
 (
-  input logic clk,
-  input logic rst,
 
   input logic [31:0] req_data0,
-  input logic [31:0] req_data1,
   output logic [31:0] ssha256_sum0
 
   );
 
-//
-// Local/internal parameters and useful defines:
-// ------------------------------------------------------------
+	logic [31:0] op1;
+	logic [31:0] op2;
+	logic [31:0] op3;
 
-`define ROR32(a,b) ((a >> b) | (a << 32-b))
-`define SRL32(a,b) ((a >> b))
+	assign op1 = (req_data0 >> 2) | (req_data0 << (32 - 2));
+	assign op2 = (req_data0 >> 13) | (req_data0 << (32 - 13));
+	assign op3 = (req_data0 >> 22) | (req_data0 << (32 - 22));
 
+	assign ssha256_sum0 = op1 ^ op2 ^ op3;
 
-  assign ssha256_sum0 = `ROR32(req_data0, 2) ^ `ROR32(req_data0,13) ^ `ROR32(req_data0,22);
-
-
-  //
-  // Clean up macro definitions
-  // ------------------------------------------------------------
-
-  `undef ROR32
-  `undef SRL32
 
   endmodule
