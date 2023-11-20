@@ -104,8 +104,6 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 	fifo_interface #(.DATA_WIDTH(32)) lq_7();
 	fifo_interface #(.DATA_WIDTH(32)) lq_2();
 
-	fifo_interface #(.DATA_WIDTH(32)) w_fifo_val();
-
 	cva5_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
     	lq_16_fifo (.clk(clk), .rst(~rst_n), .fifo(lq_16));
 	
@@ -118,16 +116,6 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 	cva5_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
     	lq_2_fifo (.clk(clk), .rst(~rst_n), .fifo(lq_2));
 
-	cva5_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
-    	lq_w_fifo (.clk(clk), .rst(~rst_n), .fifo(w_fifo_val));  //should change depth here
-
-	assign w_fifo_val.push = push_w;
-	assign w_fifo_val.pop = pop_w;
-	assign w_fifo_val.data_in = data_in_w;
-	assign data_out_w = w_fifo_val.data_out;
-	assign valid_w = w_fifo_val.valid;
-	assign full_w = w_fifo_val.full;
-	assign w_fifo_val.potential_push = potential_push_w;
 
 	assign lq_16.push = push_16;
 	assign lq_16.pop = pop_16;
@@ -161,11 +149,6 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 	assign lq_15.potential_push = potential_push_15;
 	assign lq_7.potential_push = potential_push_7;
 	assign lq_2.potential_push = potential_push_2;
-
-	//assign wt_16 = lq_16.data_out;
-	//assign wt_15 = lq_15.data_out;
-	//assign wt_7 = lq_7.data_out;
-	//assign wt_2 = lq_2.data_out;
 
 //another fifo for w value
 
@@ -239,39 +222,6 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 				end
 
 			end
-
-
-			/*`read_64: next_state = `rev_64;
-
-			`rev_64: begin
-				if(count3 == 4) begin
-					next_state = `collect;
-				end
-				else begin
-					next_state = `read_64; 
-				end
-			end
-
-			`collect: next_state = `stable_64;
-
-			`stable_64: begin
-				if(count == 4) begin
-					next_state = `process_64;
-				end
-				else begin
-					next_state = `read_64; 
-				end
-			end
-
-
-			`process_64: begin
-				if(count2 == 16) begin
-					next_state = `done;
-				end
-				else begin
-					next_state = `read_64; 
-				end
-			end*/
 
 			`done: next_state = `done;
 
@@ -443,55 +393,11 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 
 						
 
-
-
-					/*	if(setup_counter > 8) begin
-							pop_16 <= 1;
-							pop_2 <= 1;
-							pop_15 <= 1;
-						end
-
-						if(setup_counter > 9) begin
-							wt_7 <= d_ram[addr_reg];
-							wt_16 <= data_out_16;
-							wt_15 <= data_out_15;
-							wt_2 <= data_out_2;
-						end
-
-						if(setup_counter > 10) begin
-							//collect val calc val here
-							push_w <= 1;
-							//pop_15 <= 0;
-							data_in_w <= wt;
-							potential_push_w <= 1;
-						end*/
-
 						//increment counter
 						setup_counter <= setup_counter + 1;
 
 						//////////////////////////////////////////
 
-/*assign lq_16.push = push_16;
-	assign lq_16.pop = pop_16;
-	assign lq_16.data_in = data_in_16;
-	assign data_out_16 = lq_16.data_out;
-	assign valid_16 = lq_16.valid;
-	assign full_16 = lq_16.full; 
-
-reset fifo signals
-assign fifo signals
-set up w fifo
-also reset counter under en
-check setup counter incrementation
-continue pushing to fifo terminate condition
-check fifo reset signal
-check w mem setup
-check conrol signals on the second half
-make sure all fifo control signals are reset properly
-edit state transitions
-check counter widths
-check all counter increments
-*/
 					end
 
 
@@ -610,47 +516,6 @@ check all counter increments
 
 					`read_64: begin
 
-
-						/*if(count3 == 0) begin
-							addr_reg3 <= next_index[7:0] - 16;
-						end
-						else if(count3 == 1) begin
-							addr_reg3 <= next_index[7:0] - 7;
-						end
-						else if(count3 == 2) begin
-							addr_reg3 <= next_index[7:0] - 15;
-						end
-						else begin
-							addr_reg3 <= next_index[7:0] - 2;
-						end*/
-
-
-
-
-
-/// adjust control signals here
-
-						/*if(ele_counter == 0) begin
-							pop_16 <= 1;
-							pop_2 <= 1;
-							pop_15 <= 1;
-							pop_7 <= 1;
-							pop_counter <= pop_counter + 1;
-							ele_counter <= ele_counter + 1;
-						end
-						if(ele_counter == 1) begin
-							wt_7 <= data_out_7;
-							wt_16 <= data_out_16;
-							wt_15 <= data_out_15;
-							wt_2 <= data_out_2;
-							addr_reg2 <= next_index[7:0]; //increment count here
-						end*/
-
-//adjust count and count 2 value in next_index 
-// if else in pop counter 
-//if else in the following blocks
-
-						//addr_reg2 <= next_index[7:0];
 						if(pop_en == 1) begin
 							pop_en <= 0;
 						end
@@ -780,56 +645,6 @@ check all counter increments
 						//terminate logic
 
 					end
-					`rev_64: begin
-						if(count3 == 0) begin
-							//wt_16 <= rddata3;
-							wt_16 <= w_ram[addr_reg3];
-						end
-						else if(count3 == 1) begin
-							//wt_7 <= rddata3;
-							wt_7 <= w_ram[addr_reg3];
-						end
-						else if(count3 == 2) begin
-							//wt_15 <= rddata3;
-							wt_15 <= w_ram[addr_reg3];
-						end
-						else begin
-							//wt_2 <= rddata3;
-							wt_2 <= w_ram[addr_reg3];
-						end
-
-						k_val <= k_rom[addr_reg2];
-					
-						count3 <= count3 + 1;
-						//wren_reg <= 1'b0;
-					end
-					`collect: begin
-						
-						data_val <= wt;
-
-						count3<=0;
-						count <= count + 1;
-						w_ram[next_index[7:0]] <= wt;
-
-					end
-
-					`stable_64: begin
-						A <= H_val;
-						B <= A;
-						C <= B;
-						D <= C;
-						E <= D_val;
-						F <= E;
-						G <= F;
-						H <= G;
-					end
-
-					`process_64: begin
-						count <= 0; 
-						count2 <= count2 + 1; 
-						//wren_reg <= 1'b0;
-					end
-
 					
 					`done: begin
 						rdy_reg <= 1'b1;
