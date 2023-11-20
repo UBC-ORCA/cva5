@@ -192,6 +192,24 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 			`reset: next_state = `one;
 
 			`one: begin
+				if(ele_counter == 2) begin
+					next_state = `read_64;  //transistion based on ele_counter
+				end
+				else begin
+					next_state = `one; 
+				end
+			end
+
+			/*`one: begin
+				if(setup_counter == 16) begin
+					next_state = `two;  //transistion based on ele_counter
+				end
+				else begin
+					next_state = `one; 
+				end
+			end*/
+
+			/*`one: begin
 				if(count == 4) begin
 					next_state = `process;
 				end
@@ -208,10 +226,10 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 				else begin
 					next_state = `one; 
 				end
-			end
+			end*/
 
-			`two: next_state = `three;
-			`three: next_state = `read_64;
+			//`two: next_state = `three;
+			//`three: next_state = `read_64;
 
 			`read_64: begin
 				if(pop_counter == 50) begin
@@ -300,14 +318,19 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 				case(next_state)
 					`one: begin
 						/* set new addresses for d and k memory */
-						addr_reg <= next_index[7:0] + base;
-						addr_reg2 <= next_index[7:0];
-						count <= count + 1;
-						mem <= next_index[7:0]; 
+						//addr_reg <= next_index[7:0] + base;
+						//addr_reg2 <= next_index[7:0];
+
+						if(setup_counter != 16) begin 
+							addr_reg <= setup_counter + base;
+							addr_reg2 <= setup_counter;
+							count <= count + 1;
+							mem <= next_index[7:0]; 
+						end
 						///////////////////////////////////////////
 
 						/* receive data from d and k memory */
-						if(init_counter >= 1) begin
+						if(init_counter >= 1 && ele_counter < 1) begin
 							data_val <= d_ram[addr_reg];
 							k_val <= k_rom[addr_reg2];
 							//w_ram[mem] <= d_ram[addr_reg];
@@ -340,7 +363,7 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 						
 						//need to assign fifo control signals here
 
-						if(setup_counter > 0) begin
+						if(setup_counter > 0  && ele_counter < 1) begin
 							push_16 <= 1;
 							data_in_16 <= d_ram[addr_reg];
 							potential_push_16 <= 1;
@@ -353,7 +376,7 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 							potential_push_16 <= 0;
 						end
 
-						if(setup_counter > 0  && setup_counter  < 8) begin
+						if(setup_counter > 0  && setup_counter  < 8 && ele_counter < 1) begin
 							push_7 <= 1;
 							data_in_7 <= w_ram[addr_reg3];
 							potential_push_7 <= 1;
@@ -365,7 +388,7 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 							potential_push_7 <= 0;
 						end
 
-						if(setup_counter > 1  && setup_counter < 17) begin
+						if(setup_counter > 1  && setup_counter < 17 && ele_counter < 1) begin
 							push_15 <= 1;
 							data_in_15 <= d_ram[addr_reg];
 							potential_push_15 <= 1;
@@ -378,7 +401,7 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 							potential_push_15 <= 0;
 						end
 
-						if(setup_counter >= 15  && setup_counter < 17) begin
+						if(setup_counter >= 15  && setup_counter < 17 && ele_counter < 1) begin
 							push_2 <= 1;
 							data_in_2 <= d_ram[addr_reg];
 							potential_push_2 <= 1;
@@ -394,9 +417,18 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 						
 
 						//increment counter
-						setup_counter <= setup_counter + 1;
+						//setup_counter <= setup_counter + 1;
 
 						//////////////////////////////////////////
+
+						if(setup_counter < 16) begin
+							setup_counter <= setup_counter + 1;
+						end
+						else begin
+							ele_counter <= ele_counter + 1;
+
+						end
+						///////////////////////////////////////////
 
 					end
 
