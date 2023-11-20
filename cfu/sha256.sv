@@ -1,21 +1,10 @@
 
 
 `define reset 4'b0000
-`define read 4'b0001
-`define stable 4'b0010
-`define rev 4'b0011
 `define done 4'b0100
-`define process 4'b0101
 `define read_64 4'b0110
-`define stable_64 4'b0111
-`define rev_64 4'b1000
-`define collect 4'b1001
-`define process_64 4'b1010
 `define one 4'b1011
 `define errorrrrr 4'bxxxx
-
-`define two 4'b1100
-`define three 4'b1101
 
 module sha256(input logic clk, input logic rst_n, input logic en, output logic rdy, 
 		input logic [31:0] A_init, input logic [31:0] B_init,
@@ -200,37 +189,6 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 				end
 			end
 
-			/*`one: begin
-				if(setup_counter == 16) begin
-					next_state = `two;  //transistion based on ele_counter
-				end
-				else begin
-					next_state = `one; 
-				end
-			end*/
-
-			/*`one: begin
-				if(count == 4) begin
-					next_state = `process;
-				end
-				else begin
-					next_state = `one; 
-				end
-			end
-
-			`process: begin
-				if(count2 == 4) begin
-					//next_state = `read_64;
-					next_state = `two;
-				end
-				else begin
-					next_state = `one; 
-				end
-			end*/
-
-			//`two: next_state = `three;
-			//`three: next_state = `read_64;
-
 			`read_64: begin
 				if(pop_counter == 50) begin
 					next_state = `done;
@@ -318,8 +276,6 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 				case(next_state)
 					`one: begin
 						/* set new addresses for d and k memory */
-						//addr_reg <= next_index[7:0] + base;
-						//addr_reg2 <= next_index[7:0];
 
 						if(setup_counter != 16) begin 
 							addr_reg <= setup_counter + base;
@@ -414,10 +370,6 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 							potential_push_2 <= 0;
 						end
 
-						
-
-						//increment counter
-						//setup_counter <= setup_counter + 1;
 
 						//////////////////////////////////////////
 
@@ -431,120 +383,6 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 						///////////////////////////////////////////
 
 					end
-
-
-					`process: begin
-						count <= 0; 
-						count2 <= count2 + 1; 
-						//wren_reg <= 1'b0;
-
-
-						push_16 <= 0;
-						push_2 <= 0;
-						push_7 <= 0;
-						push_15 <= 0;
-						potential_push_16 <= 0;
-						potential_push_2 <= 0;
-						potential_push_7 <= 0;
-						potential_push_15 <= 0;
-						
-					end
-
-					`two: begin 
-						data_val <= d_ram[addr_reg];
-							k_val <= k_rom[addr_reg2];
-							//w_ram[mem] <= d_ram[addr_reg];
-
-						A <= H_val;
-						B <= A;
-						C <= B;
-						D <= C;
-						E <= D_val;
-						F <= E;
-						G <= F;
-						H <= G;
-
-
-//need to assign fifo control signals here
-
-						//need to assign fifo control signals here
-
-						if(setup_counter > 0) begin
-							push_16 <= 1;
-							data_in_16 <= d_ram[addr_reg];
-							potential_push_16 <= 1;
-
-						end
-						else begin
-							//turn off signals here
-							push_16 <= 0;
-							data_in_16 <= 0;
-							potential_push_16 <= 0;
-						end
-
-						if(setup_counter > 0  && setup_counter  < 8) begin
-							push_7 <= 1;
-							data_in_7 <= w_ram[addr_reg3];
-							potential_push_7 <= 1;
-						end
-						else begin
-							//turn off signals here
-							push_7 <= 0;
-							data_in_7 <= 0;
-							potential_push_7 <= 0;
-						end
-
-						if(setup_counter > 1  && setup_counter < 17) begin
-							push_15 <= 1;
-							data_in_15 <= d_ram[addr_reg];
-							potential_push_15 <= 1;
-
-						end
-						else begin
-							//turn off signals here
-							push_15 <= 0;
-							data_in_15 <= 0;
-							potential_push_15 <= 0;
-						end
-
-						if(setup_counter >= 15  && setup_counter < 17) begin
-							push_2 <= 1;
-							data_in_2 <= d_ram[addr_reg];
-							potential_push_2 <= 1;
-
-						end
-						else begin
-							//turn off signals here
-							push_2 <= 0;
-							data_in_2 <= 0;
-							potential_push_2 <= 0;
-						end
-
-						
-					end
-
-					`three: begin
-						A <= H_val;
-						B <= A;
-						C <= B;
-						D <= C;
-						E <= D_val;
-						F <= E;
-						G <= F;
-						H <= G;
-
-						push_16 <= 0;
-						push_2 <= 0;
-						push_7 <= 0;
-						push_15 <= 0;
-						potential_push_16 <= 0;
-						potential_push_2 <= 0;
-						potential_push_7 <= 0;
-						potential_push_15 <= 0;
-
-
-					end
-					
 
 					`read_64: begin
 
