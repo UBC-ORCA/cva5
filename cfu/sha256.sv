@@ -88,21 +88,21 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 	logic potential_push_w;
 
 
-	fifo_interface #(.DATA_WIDTH(32)) lq_16();
-	fifo_interface #(.DATA_WIDTH(32)) lq_15();
-	fifo_interface #(.DATA_WIDTH(32)) lq_7();
-	fifo_interface #(.DATA_WIDTH(32)) lq_2();
+	cfu_fifo_interface #(.DATA_WIDTH(32)) lq_16();
+	cfu_fifo_interface #(.DATA_WIDTH(32)) lq_15();
+	cfu_fifo_interface #(.DATA_WIDTH(32)) lq_7();
+	cfu_fifo_interface #(.DATA_WIDTH(32)) lq_2();
 
-	cva5_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
+	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
     	lq_16_fifo (.clk(clk), .rst(~rst_n), .fifo(lq_16));
 	
-	cva5_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
+	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
     	lq_15_fifo (.clk(clk), .rst(~rst_n), .fifo(lq_15));
 
-	cva5_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
+	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
     	lq_7_fifo (.clk(clk), .rst(~rst_n), .fifo(lq_7));
 
-	cva5_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
+	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
     	lq_2_fifo (.clk(clk), .rst(~rst_n), .fifo(lq_2));
 
 
@@ -154,12 +154,16 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 	logic[32-1:0] k_rom[0:256-1];
 	logic[32-1:0] d_ram[0:256-1];
 	logic[32-1:0] w_ram[0:256-1];
-	initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
-	initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
-	initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
+	initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
+	initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
+	initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
 	//C:/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
 	//C:/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
 	//C:/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
+
+	//initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
+	//initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
+	//initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
 	////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////
