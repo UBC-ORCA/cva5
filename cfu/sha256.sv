@@ -39,11 +39,13 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 
 	logic [31:0] data_val; logic [31:0] k_val; logic [31:0] D_val; logic [31:0] H_val;
 
-	logic [1:0] init_counter;
+	logic [3:0] init_counter;
 	logic [1:0] init_counter64;
 	logic [5:0] pop_counter;
 	logic pop_en;
-	logic [1:0] ele_counter;
+	logic [5:0] ele_counter;
+
+	logic [31:0] next_in_line;
 
 ///////////////////////////////////
 	//fifo declarations
@@ -79,13 +81,21 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 
 	logic [6:0] setup_counter;
 
-	logic push_w;
+	/*logic push_w;
     	logic pop_w;
     	logic [31:0] data_in_w;
     	logic [31:0] data_out_w;
     	logic valid_w;
     	logic full_w;
-	logic potential_push_w;
+	logic potential_push_w;*/
+
+	logic lq_16_rst;
+	logic lq_15_rst;
+	logic lq_7_rst;
+	logic lq_2_rst;
+	logic lq_w_rst;
+	logic lq_16_rst_2;
+	logic lq_7_rst_2;
 
 
 	cfu_fifo_interface #(.DATA_WIDTH(32)) lq_16();
@@ -94,16 +104,16 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 	cfu_fifo_interface #(.DATA_WIDTH(32)) lq_2();
 
 	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
-    	lq_16_fifo (.clk(clk), .rst(~rst_n), .fifo(lq_16));
+    	lq_16_fifo (.clk(clk), .rst(~lq_16_rst), .fifo(lq_16));
 	
 	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
-    	lq_15_fifo (.clk(clk), .rst(~rst_n), .fifo(lq_15));
+    	lq_15_fifo (.clk(clk), .rst(~lq_15_rst), .fifo(lq_15));
 
 	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
-    	lq_7_fifo (.clk(clk), .rst(~rst_n), .fifo(lq_7));
+    	lq_7_fifo (.clk(clk), .rst(~lq_7_rst), .fifo(lq_7));
 
 	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
-    	lq_2_fifo (.clk(clk), .rst(~rst_n), .fifo(lq_2));
+    	lq_2_fifo (.clk(clk), .rst(~lq_2_rst), .fifo(lq_2));
 
 
 	assign lq_16.push = push_16;
@@ -139,9 +149,76 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 	assign lq_7.potential_push = potential_push_7;
 	assign lq_2.potential_push = potential_push_2;
 
+
 //another fifo for w value
 
-	
+/* for debug purposes */
+logic [31:0] cc;
+/* end */
+
+
+	/*new fifo declarations*/
+	logic push_w;
+    	logic pop_w;
+    	logic [31:0] data_in_w;
+    	logic [31:0] data_out_w;
+    	logic valid_w;
+    	logic full_w;
+	logic potential_push_w;
+
+
+	logic push_16_2;
+    	logic pop_16_2;
+    	logic [31:0] data_in_16_2;
+    	logic [31:0] data_out_16_2;
+    	logic valid_16_2;
+    	logic full_16_2;
+	logic potential_push_16_2;
+
+	logic push_7_2;
+    	logic pop_7_2;
+    	logic [31:0] data_in_7_2;
+    	logic [31:0] data_out_7_2;
+    	logic valid_7_2;
+    	logic full_7_2;
+	logic potential_push_7_2;
+
+	cfu_fifo_interface #(.DATA_WIDTH(32)) lq_16_2();
+	cfu_fifo_interface #(.DATA_WIDTH(32)) lq_7_2();
+	cfu_fifo_interface #(.DATA_WIDTH(32)) lq_w();
+
+	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
+    	lq_16_2_fifo (.clk(clk), .rst(~lq_16_rst_2), .fifo(lq_16_2));
+
+	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
+    	lq_7_2_fifo (.clk(clk), .rst(~lq_7_rst_2), .fifo(lq_7_2));
+
+	cfu_fifo #(.DATA_WIDTH(32), .FIFO_DEPTH(32))
+    	lq_w_fifo (.clk(clk), .rst(~lq_w_rst), .fifo(lq_w));
+
+	assign lq_16_2.push = push_16_2;
+	assign lq_16_2.pop = pop_16_2;
+	assign lq_16_2.data_in = data_in_16_2;
+	assign data_out_16_2 = lq_16_2.data_out;
+	assign valid_16_2 = lq_16_2.valid;
+	assign full_16_2 = lq_16_2.full;
+	assign lq_16_2.potential_push = potential_push_16_2;
+
+	assign lq_7_2.push = push_7_2;
+	assign lq_7_2.pop = pop_7_2;
+	assign lq_7_2.data_in = data_in_7_2;
+	assign data_out_7_2 = lq_7_2.data_out;
+	assign valid_7_2 = lq_7_2.valid;
+	assign full_7_2 = lq_7_2.full;
+	assign lq_7_2.potential_push = potential_push_7_2;
+
+	assign lq_w.push = push_w;
+	assign lq_w.pop = pop_w;
+	assign lq_w.data_in = data_in_w;
+	assign data_out_w = lq_w.data_out;
+	assign valid_w = lq_w.valid;
+	assign full_w = lq_w.full;
+	assign lq_w.potential_push = potential_push_w;
 
 	
 //////////////////////////////////
@@ -154,16 +231,16 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 	logic[32-1:0] k_rom[0:256-1];
 	logic[32-1:0] d_ram[0:256-1];
 	logic[32-1:0] w_ram[0:256-1];
-	initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
-	initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
-	initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
+	//initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
+	//initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
+	//initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
 	//C:/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
 	//C:/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
 	//C:/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
 
-	//initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
-	//initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
-	//initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
+	initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
+	initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
+	initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
 	////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -268,6 +345,28 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 
 			ele_counter <= 0;
 
+			cc <= 0;
+
+			next_in_line <= 0;
+
+			push_7_2 <= 0;
+			pop_7_2 <= 0;
+			data_in_7_2 <= 0;
+			potential_push_7_2 <= 0;
+
+			push_16_2 <= 0;
+			pop_16_2 <= 0;
+			data_in_16_2 <= 0;
+			potential_push_16_2 <= 0;
+
+			lq_16_rst <= 0;
+			lq_15_rst <= 0;
+			lq_7_rst <= 0;
+			lq_2_rst <= 0;
+			lq_w_rst <= 0;
+			lq_16_rst_2 <= 0;
+			lq_7_rst_2 <= 0;
+
 
 //reset fifo control signals here
 
@@ -276,6 +375,22 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 			if(~rdy) begin
 
 				curr_state <= next_state; 
+
+				cc <= cc + 1;
+
+				//////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////
+				lq_16_rst <= 1;
+				lq_15_rst <= 1;
+				lq_7_rst <= 1;
+				lq_2_rst <= 1;
+				lq_w_rst <= 1;
+				lq_16_rst_2 <= 1;
+				lq_7_rst_2 <= 1;
+
+
+				//////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////
 
 				case(next_state)
 					`one: begin
@@ -311,22 +426,77 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 						//////////////////////////////////////////
 
 						/* increment counter */
-						if(init_counter != 3) begin
-							init_counter <= init_counter +1;
+						//if(init_counter != 3) begin
+							//init_counter <= init_counter +1;
+						//end
+						if(init_counter != 10) begin
+							init_counter <= init_counter +1;   //may need to adjust this adjust counter size
 						end
 
 						/* setup the w memory */
-						//addr_reg3 <= next_index[7:0] + base + 14;
-						if(setup_counter  < 7) begin
-							addr_reg3 <= next_index[7:0] + (base << 2) + 9;
+						if(init_counter  < 9) begin   ///////////////adjust the if condition here
+							if(init_counter == 0) begin
+								addr_reg3 <= next_index[7:0] + (base << 2) + 9;
+							end
+							else if(init_counter == 1) begin
+								addr_reg3 <= next_index[7:0] + (base << 2) + 9;
+							end
+							else if(init_counter == 2) begin
+								addr_reg3 <= next_index[7:0] + (base << 2) + 12;
+							end
+							else if(init_counter == 3) begin
+								addr_reg3 <= next_index[7:0] + (base << 2) + 12;
+							end
+							else begin
+								addr_reg3 <= next_index[7:0] + (base << 2) + 7;
+							end
+
+							
 						end
 						
 						//need to assign fifo control signals here
 
-						if(setup_counter > 0  && ele_counter < 1) begin
-							push_16 <= 1;
-							data_in_16 <= d_ram[addr_reg];
-							potential_push_16 <= 1;
+						//if(setup_counter > 0  && ele_counter < 1) begin
+						if(setup_counter > 0) begin
+							if(init_counter == 1) begin
+								push_16 <= 1;
+								data_in_16 <= d_ram[addr_reg];
+								potential_push_16 <= 1;
+							end
+							else if(init_counter == 2) begin
+								push_16 <= 1;
+								data_in_16 <= d_ram[addr_reg];
+								potential_push_16 <= 1;
+							end
+							else if(init_counter == 3) begin
+								push_16 <= 1;
+								data_in_16 <= d_ram[addr_reg];
+								potential_push_16 <= 1;
+							end
+							else if(init_counter == 4) begin
+								push_16 <= 1;
+								data_in_16 <= d_ram[addr_reg];
+								potential_push_16 <= 1;
+							end
+
+							else if(init_counter > 4)  begin
+								push_16 <= 1;
+								if(ele_counter == 1) begin
+									data_in_16 <= data_out_16_2;
+								end
+								else begin
+									data_in_16 <= d_ram[addr_reg];
+								end
+								potential_push_16 <= 1;
+							end
+
+							//turn off signals here
+							else begin
+								push_16 <= 0;
+								data_in_16 <= 0;
+								potential_push_16 <= 0;
+							end
+							
 
 						end
 						else begin
@@ -336,10 +506,33 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 							potential_push_16 <= 0;
 						end
 
-						if(setup_counter > 0  && setup_counter  < 8 && ele_counter < 1) begin
-							push_7 <= 1;
-							data_in_7 <= w_ram[addr_reg3];
-							potential_push_7 <= 1;
+						//if(setup_counter > 0  && ele_counter < 1) begin   //adust if condition // also adjust ele
+						if(setup_counter > 0) begin 
+							if(init_counter == 1) begin
+								push_7 <= 1;
+								data_in_7 <= w_ram[addr_reg3];
+								potential_push_7 <= 1;
+							end
+							else if(init_counter == 2) begin
+								push_7 <= 1;
+								data_in_7 <= w_ram[addr_reg3];
+								potential_push_7 <= 1;
+							end
+							else if(init_counter > 4) begin
+								push_7 <= 1;
+								if(init_counter <= 9) begin
+									data_in_7 <= w_ram[addr_reg3];
+								end
+								else begin 
+									data_in_7 <= data_out_7_2;
+								end
+								potential_push_7 <= 1;
+							end
+							else begin
+								push_7 <= 0;
+								data_in_7 <= 0;
+								potential_push_7 <= 0;
+							end
 						end
 						else begin
 							//turn off signals here
@@ -348,10 +541,40 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 							potential_push_7 <= 0;
 						end
 
-						if(setup_counter > 1  && setup_counter < 17 && ele_counter < 1) begin
-							push_15 <= 1;
-							data_in_15 <= d_ram[addr_reg];
-							potential_push_15 <= 1;
+						//if(setup_counter > 1   && ele_counter < 1) begin
+						if(setup_counter > 1) begin
+							if(init_counter == 2) begin
+								push_15 <= 1;
+								data_in_15 <= d_ram[addr_reg];
+								potential_push_15 <= 1;
+							end
+							else if(init_counter == 3) begin
+								push_15 <= 1;
+								data_in_15 <= d_ram[addr_reg];
+								potential_push_15 <= 1;
+							end
+							else if(init_counter == 4) begin
+								push_15 <= 1;
+								data_in_15 <= d_ram[addr_reg];
+								potential_push_15 <= 1;
+							end
+							else if(init_counter > 4) begin
+								push_15 <= 1;
+								//data_in_15 <= d_ram[addr_reg];
+								if(ele_counter == 1) begin
+									data_in_15 <= data_out_16_2;
+								end
+								else begin
+									data_in_15 <= d_ram[addr_reg];
+								end
+								potential_push_15 <= 1;
+							end
+
+							else begin
+								push_15 <= 0;
+								data_in_15 <= 0;
+								potential_push_15 <= 0;
+							end
 
 						end
 						else begin
@@ -361,10 +584,24 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 							potential_push_15 <= 0;
 						end
 
-						if(setup_counter >= 15  && setup_counter < 17 && ele_counter < 1) begin
-							push_2 <= 1;
-							data_in_2 <= d_ram[addr_reg];
-							potential_push_2 <= 1;
+						if(setup_counter > 2 && ele_counter < 1) begin //lodr condition here
+
+							if(init_counter == 3) begin
+								push_2 <= 1;
+								data_in_2 <= w_ram[addr_reg3];
+								potential_push_2 <= 1;
+							end
+							else if(init_counter == 4) begin
+								push_2 <= 1;
+								data_in_2 <= w_ram[addr_reg3];
+								potential_push_2 <= 1;
+							end
+
+							else begin
+								push_2 <= 0;
+								data_in_2 <= 0;
+								potential_push_2 <= 0;
+							end
 
 						end
 						else begin
@@ -373,6 +610,103 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 							data_in_2 <= 0;
 							potential_push_2 <= 0;
 						end
+
+						/* for popping from fifo*/
+						//if(ele_counter < 1) begin  //take out the pop loop
+							if(init_counter >= 4) begin
+								pop_16 <= 1;
+								//pop_2 <= 1;
+								pop_15 <= 1;
+								pop_7 <= 1;
+							end
+							else begin
+								pop_16 <= 0;
+								//pop_2 <= 0;
+								pop_15 <= 0;
+								pop_7 <= 0;
+
+							end
+						//end
+						if(init_counter == 4  || init_counter == 5) begin
+							pop_2 <= 1;
+						end
+						else begin
+							pop_2 <= 0;
+						end
+						/* for assinment to process */
+						if(init_counter == 5) begin 
+							wt_7 <= data_out_7;
+							wt_16 <= data_out_16;
+							wt_15 <= data_out_15;
+							wt_2 <= data_out_2;
+
+						end
+						if(init_counter == 6) begin 
+							wt_7 <= data_out_7;
+							wt_16 <= data_out_16;
+							wt_15 <= data_out_15;
+							wt_2 <= data_out_2;
+
+						end
+						if(init_counter >= 7) begin
+							wt_7 <= data_out_7;
+							wt_16 <= data_out_16;
+							wt_15 <= data_out_15;
+							wt_2 <= next_in_line;
+						end
+
+						/* for collection from process and updating the next inline value*/
+
+						if(init_counter == 3 || init_counter == 4) begin
+							next_in_line <= w_ram[addr_reg3];
+						end
+						if(init_counter >= 6) begin
+							next_in_line <= wt;
+						end
+						/* filling in fifo */
+						// fill 3 fifos 
+						if(init_counter >= 6) begin 
+							push_w <= 1;
+							data_in_w <= wt;
+							potential_push_w <= 1;
+
+							push_7_2 <= 1;
+							data_in_7_2 <= wt;
+							potential_push_7_2 <= 1;
+
+							push_16_2 <= 1;
+							data_in_16_2 <= wt;
+							potential_push_16_2 <= 1;
+						end
+						else begin 
+							push_w <= 0;
+							data_in_w <= 0;
+							potential_push_w <= 0;
+
+							push_7_2 <= 0;
+							data_in_7_2 <= 0;
+							potential_push_7_2 <= 0;
+
+							push_16_2 <= 0;
+							data_in_16_2 <= 0;
+							potential_push_16_2 <= 0;
+						end
+						// transition from receiving from memory to one of the fifo
+						//if(init_counter >= 8 && setup_counter != 16) begin 
+						if(init_counter >= 9) begin 
+							pop_7_2 <= 1;
+						end
+						else begin 
+							pop_7_2 <= 0;
+						end
+
+						if(setup_counter == 16) begin 
+							pop_16_2 <= 1;
+						end
+						else begin 
+							pop_16_2 <= 0;
+						end
+
 
 
 						//////////////////////////////////////////
@@ -390,65 +724,126 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 
 					`read_64: begin
 
-						if(pop_en == 1) begin
-							pop_en <= 0;
+						/*ele_counter increment */
+						if(ele_counter != 33) begin //change value here
+							ele_counter <= ele_counter + 1;
+						end
+						
+						/*fifo buffer pop */
+						if(ele_counter < 34) begin
+							pop_7_2 <= 1;
+							pop_16_2 <= 1;
 						end
 						else begin
-							pop_en <= 1;
+							pop_7_2 <= 0;
+							pop_16_2 <= 0;
 						end
 
-						if(pop_counter < 48) begin
-							if(pop_en == 1) begin
-								pop_16 <= 1;
-								pop_2 <= 1;
-								pop_15 <= 1;
-								pop_7 <= 1;
-							end
-							else begin
-								pop_16 <= 0;
-								pop_2 <= 0;
-								pop_15 <= 0;
-								pop_7 <= 0;
-							end
+						/*pushing fifo buffer*/
+						if(ele_counter < 34) begin
+							push_7_2 <= 1;
+							data_in_7_2 <= wt;
+							potential_push_7_2 <= 1;
+
+							push_16_2 <= 1;
+							data_in_16_2 <= wt;
+							potential_push_16_2 <= 1;
 						end
 						else begin
+							push_7_2 <= 0;
+							data_in_7_2 <= 0;
+							potential_push_7_2 <= 0;
+
+							push_16_2 <= 0;
+							data_in_16_2 <= 0;
+							potential_push_16_2 <= 0;
+						end
+
+						/* push to the main fifo */
+						if(ele_counter < 35) begin
+							push_16 <= 1;
+							data_in_16 <= data_out_16_2;
+							potential_push_16 <= 1;
+							push_15 <= 1;
+							data_in_15 <= data_out_16_2;
+							potential_push_15 <= 1;
+							push_7 <= 1;
+							data_in_7 <= data_out_7_2;
+							potential_push_7 <= 1;
+						end
+						else begin
+							push_16 <= 0;
+							data_in_16 <= 0;
+							potential_push_16 <= 0;
+							push_15 <= 0;
+							data_in_15 <= 0;
+							potential_push_15 <= 0;
+							push_7 <= 0;
+							data_in_7 <= 0;
+							potential_push_7 <= 0;
+
+						end
+
+						/* pop from the main fifo */
+						if(ele_counter < 36) begin
+							pop_16 <= 1;
+							pop_15 <= 1;
+							pop_7 <= 1;
+						end
+						else begin 
 							pop_16 <= 0;
-							pop_2 <= 0;
 							pop_15 <= 0;
 							pop_7 <= 0;
 						end
-						if(pop_en == 1) begin
-							pop_counter <= pop_counter + 1;
+
+						/*setup next in line and wt operands*/
+						if(ele_counter < 38) begin
+							next_in_line <= wt;
 						end
-						/* receive data from d and k memory */
-						if(init_counter64 > 0) begin
-							//k_val <= k_rom[addr_reg2];
-							
+
+						/*collect wt operand */
+						if(ele_counter < 37) begin 
 							wt_7 <= data_out_7;
 							wt_16 <= data_out_16;
 							wt_15 <= data_out_15;
-							wt_2 <= data_out_2;
-							//addr_reg2 <= next_index[7:0];    //increment count here
-							addr_reg2 <= setup_counter;
-							
-
-//if(pop_en == 0) begin
-								//if(count == 4)
-							//end
+							wt_2 <= next_in_line;
 						end
+						
+						/* fill final  wt fifo*/
+						if(ele_counter < 38) begin 
+							push_w <= 1;
+							data_in_w <= wt;
+							potential_push_w <= 1;
+						end
+						else begin 
+							push_w <= 0;
+							data_in_w <= 0;
+							potential_push_w <= 0;
+						end
+
+						/////////////////////////////////////////
+
+
+						if(pop_counter < 48) begin
+							pop_w <= 1;
+						end
+						else begin
+							pop_w <= 0;
+						end
+
+						pop_counter <= pop_counter + 1;
+						addr_reg2 <= setup_counter;
+						setup_counter <= setup_counter + 1; //counter increment here
+
 						///////////////////////////////////////////
 
-						if(init_counter64 > 1) begin
+						if(init_counter64 > 0) begin
 							k_val <= k_rom[addr_reg2];
-							data_val <= wt;
-							//w_ram[setup_counter] <= wt; //no longer need to pass to memory
-							if(pop_en == 1) begin
-								setup_counter <= setup_counter + 1; //counter increment here
-							end
+							data_val <= data_out_w;
+								
 						end
 					
-						if(init_counter64 > 2) begin //terminate logic usin gsetup_counter here
-							if(pop_en == 0) begin
+						if(init_counter64 > 1) begin //terminate logic usin gsetup_counter here
 							A <= H_val;
 							B <= A;
 							C <= B;
@@ -457,7 +852,6 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 							F <= E;
 							G <= F;
 							H <= G;
-							end
 						end
 
 						if(init_counter64 != 3) begin
@@ -467,54 +861,6 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 
 						//setup counter control and incremetation
 						//fill in fifo
-
-						if(init_counter64 > 1 && setup_counter  < 48  && pop_en == 1) begin
-							push_16 <= 1;
-							data_in_16 <= wt;
-							potential_push_16 <= 1;
-						end
-						else begin
-							//turn off signals here
-							push_16 <= 0;
-							data_in_16 <= 0;
-							potential_push_16 <= 0;
-						end
-
-						if(init_counter64 > 1 && setup_counter  < 49  && pop_en == 1) begin
-							push_15 <= 1;
-							data_in_15 <= wt;
-							potential_push_15 <= 1;
-						end
-						else begin
-							//turn off signals here
-							push_15 <= 0;
-							data_in_15 <= 0;
-							potential_push_15 <= 0;
-						end
-
-						if(init_counter64 > 1 && setup_counter  < 57  && pop_en == 1) begin
-							push_7 <= 1;
-							data_in_7 <= wt;
-							potential_push_7 <= 1;
-						end
-						else begin
-							//turn off signals here
-							push_7 <= 0;
-							data_in_7 <= 0;
-							potential_push_7 <= 0;
-						end
-
-						if(init_counter64 > 1 && setup_counter  < 62  && pop_en == 1) begin
-							push_2 <= 1;
-							data_in_2 <= wt;
-							potential_push_2 <= 1;
-						end
-						else begin
-							//turn off signals here
-							push_2 <= 0;
-							data_in_2 <= 0;
-							potential_push_2 <= 0;
-						end
 
 						//terminate logic
 
@@ -531,6 +877,42 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 						F_final <= F;
 						G_final <= G;
 						H_final <= H;
+
+						/*stop all fifo operations*/
+						push_16 <= 0;
+						pop_16 <= 0;
+						data_in_16 <= 0;
+						potential_push_16 <= 0;
+
+						push_2 <= 0;
+						pop_2 <= 0;
+						data_in_2 <= 0;
+						potential_push_2 <= 0;
+
+						push_w <= 0;
+						pop_w <= 0;
+						data_in_w <= 0;
+						potential_push_w <= 0;
+
+						push_15 <= 0;
+						pop_15 <= 0;
+						data_in_15 <= 0;
+						potential_push_15 <= 0;
+
+						push_7 <= 0;
+						pop_7 <= 0;
+						data_in_7 <= 0;
+						potential_push_7 <= 0;
+
+						push_7_2 <= 0;
+						pop_7_2 <= 0;
+						data_in_7_2 <= 0;
+						potential_push_7_2 <= 0;
+
+						push_16_2 <= 0;
+						pop_16_2 <= 0;
+						data_in_16_2 <= 0;
+						potential_push_16_2 <= 0;
 					end
 
 				endcase
@@ -592,6 +974,29 @@ module sha256(input logic clk, input logic rst_n, input logic en, output logic r
 			pop_en <= 1;
 
 			ele_counter <= 0;
+
+			cc <= 0;
+
+			next_in_line <= 0;
+
+			push_7_2 <= 0;
+			pop_7_2 <= 0;
+			data_in_7_2 <= 0;
+			potential_push_7_2 <= 0;
+
+			push_16_2 <= 0;
+			pop_16_2 <= 0;
+			data_in_16_2 <= 0;
+			potential_push_16_2 <= 0;
+
+			lq_16_rst <= 0;
+			lq_15_rst <= 0;
+			lq_7_rst <= 0;
+			lq_2_rst <= 0;
+			lq_w_rst <= 0;
+			lq_16_rst_2 <= 0;
+			lq_7_rst_2 <= 0;
+
 				end
 
 			end
