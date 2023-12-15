@@ -1,5 +1,4 @@
 
-
 `define reset 4'b0000
 `define done 4'b0100
 `define read_64 4'b0110
@@ -231,16 +230,16 @@ logic [31:0] cc;
 	logic[32-1:0] k_rom[0:256-1];
 	logic[32-1:0] d_ram[0:256-1];
 	logic[32-1:0] w_ram[0:256-1];
-	//initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
-	//initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
-	//initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
+	initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
+	initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
+	initial $readmemh("C:/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
 	//C:/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
 	//C:/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
 	//C:/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
 
-	initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
-	initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
-	initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
+	//initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex", d_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/dmsg.hex
+	//initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex", k_rom); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/kmsg.hex
+	//initial $readmemh("/mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex", w_ram); //path for ubuntu: /mnt/c/D/lab/sha256good/cva5pr/cva5/cfu/wmsg.hex
 	////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////
