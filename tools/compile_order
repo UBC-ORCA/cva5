@@ -97,6 +97,9 @@ core/cva5.sv
 cfu/cfu_unit.sv
 cfu/mux.sv
 
+cfu/cfu_fifo_interface.sv
+cfu/cfu_fifo.sv
+
 cfu/crc.sv
 cfu/sig0.sv
 cfu/sig1.sv
@@ -106,6 +109,7 @@ cfu/ch.sv
 cfu/maj.sv
 cfu/cfu.sv
 cfu/process4.sv
+cfu/process1.sv
 cfu/wt_calc.sv
 cfu/sha256.sv
 cfu/sha256_top.sv
