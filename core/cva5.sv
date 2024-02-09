@@ -436,7 +436,6 @@ module cva5
         .m_avalon (m_avalon),
         .dwishbone (dwishbone),                                       
         .data_bram (data_bram),
-       // .vstore_hold (vstore_hold),
         .wb_snoop (wb_snoop),
         .retire_ids (retire_ids),
         .retire_port_valid(retire_port_valid),
@@ -552,41 +551,8 @@ module cva5
     assign {cfu_wb, unit_wb[UNIT_IDS.CFU].phys_addr, unit_wb[UNIT_IDS.CFU].id} = cfu.resp_id;
     assign unit_wb[UNIT_IDS.CFU].rd = cfu.resp_data;
     assign unit_wb[UNIT_IDS.CFU].done = cfu.resp_valid & cfu_wb;
-
-    assign unit_issue[UNIT_IDS.CFU].ready = cfu.req_ready & (issue.id == retire_ids[0]);
-    assign cfu.resp_ready = 1;
-
-    /* 
-    always_comb begin
-      if (cfu.req_id[LOG2_MAX_IDS-1:0] != retire_ids[0]) begin
-        unit_issue[UNIT_IDS.CFU].ready = 1'b0;
-      end else if (cfu.req_insn[6:2] inside {VLOAD_T, VSTORE_T} && l2.wr_in_flight) begin
-        unit_issue[UNIT_IDS.CFU].ready = 1'b0;
-      end else begin
-        unit_issue[UNIT_IDS.CFU].ready = cfu.req_ready;
-      end
-    end
-
-    id_t vstore_id;
-    logic vstore_hold;
-
-    always_ff @ (posedge clk) begin
-      if (vstore_id == cfu.resp_id[LOG2_MAX_IDS-1:0] && cfu.resp_valid) begin
-        vstore_hold <= 1'b0;
-      end
-
-      if (cfu.req_insn[6:2] inside {VSTORE_T} && cfu.req_valid) begin
-        vstore_hold <= 1'b1;
-        vstore_id   <= cfu.req_id[LOG2_MAX_IDS-1:0];
-      end
-
-      if (rst) begin
-        vstore_hold <= 1'b0;
-        vstore_id <= 'b0;
-      end
-    end
-
-    */
+    assign unit_issue[UNIT_IDS.CFU].ready = cfu.req_ready & (cfu.req_id[LOG2_MAX_IDS-1:0] == retire_ids[0]);
+    assign cfu.resp_ready = unit_wb[UNIT_IDS.CFU].done ? unit_wb[UNIT_IDS.CFU].ack : 1'b1 ;
 
     ////////////////////////////////////////////////////
     //Writeback

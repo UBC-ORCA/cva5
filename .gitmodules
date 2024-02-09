@@ -1,6 +1,0 @@
-[submodule "rvv-lite"]
-	path = rvv-lite
-	url = git@github.com:UBC-ORCA/rvv-lite.git
-[submodule "verilog-axi"]
-	path = verilog-axi
-	url = git@github.com:UBC-ORCA/verilog-axi.git

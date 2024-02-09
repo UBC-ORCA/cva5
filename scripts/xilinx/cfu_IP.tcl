@@ -119,17 +119,6 @@ import_files -norecurse $origin_dir/../../core/cva5_config.sv -force
 import_files -norecurse $origin_dir/../../core/cva5_types.sv -force
 import_files -norecurse $origin_dir/../../core/set_clr_reg_with_rst.sv -force
 import_files -norecurse $origin_dir/../../cfu/crc.sv -force
-import_files -norecurse $origin_dir/../../cfu/sig0.sv -force
-import_files -norecurse $origin_dir/../../cfu/sig1.sv -force
-import_files -norecurse $origin_dir/../../cfu/sum0.sv -force
-import_files -norecurse $origin_dir/../../cfu/sum1.sv -force
-import_files -norecurse $origin_dir/../../cfu/maj.sv -force
-import_files -norecurse $origin_dir/../../cfu/ch.sv -force
-import_files -norecurse $origin_dir/../../cfu/process4.sv -force
-import_files -norecurse $origin_dir/../../cfu/wt_calc.sv -force
-import_files -norecurse $origin_dir/../../cfu/sha256.sv -force
-import_files -norecurse $origin_dir/../../cfu/sha256_top.sv -force
-import_files -norecurse $origin_dir/../../cfu/sha256_task.sv -force
 import_files -norecurse $origin_dir/../../cfu/cfu.sv -force
 import_files -norecurse $origin_dir/../../cfu/cfu_wrapper.sv -force
 

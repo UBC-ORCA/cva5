@@ -88,11 +88,6 @@ module decode_and_issue
     logic uses_rd;
 
     ///////////////////////////////////////
-    // VFU
-    logic is_vfu;
-    logic vfu_uses_rs [REGFILE_READ_PORTS];
-    logic vfu_uses_rd;
-
     rs_addr_t rs_addr [REGFILE_READ_PORTS];
     rs_addr_t rd_addr;
 
@@ -149,7 +144,6 @@ module decode_and_issue
     assign is_cfu_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & (csr_addr inside {CUSTOM_URW_CSR});
     assign is_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & ~is_cfu_csr;
     assign is_cfu = (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T, CUSTOM_2_T} | is_cfu_csr) & cfu.req_en;
-    assign is_vfu = opcode_trim inside {VALU_CFG_T, VLOAD_T, VSTORE_T} & cfu.req_en;
     assign is_fence = (opcode_trim == FENCE_T) & ~fn3[0];
     assign is_ifence = CONFIG.INCLUDE_IFENCE & (opcode_trim == FENCE_T) & fn3[0];
     assign csr_imm_op = (opcode_trim == SYSTEM_T) & fn3[2] & ~is_cfu_csr;
@@ -157,25 +151,9 @@ module decode_and_issue
 
     ////////////////////////////////////////////////////
     //Register File Support
-    assign uses_rs[RS1] = opcode_trim inside {JALR_T, BRANCH_T, LOAD_T, STORE_T, ARITH_IMM_T, ARITH_T, AMO_T} | is_csr | is_cfu & ~(is_cfu_csr & fn3[2])| vfu_uses_rs[RS1];
-    assign uses_rs[RS2] = opcode_trim inside {BRANCH_T, ARITH_T, AMO_T} | (opcode_trim inside {CUSTOM_0_T, CUSTOM_2_T} & is_cfu) | vfu_uses_rs[RS2];//Stores are exempted due to store forwarding
-    assign uses_rd = opcode_trim inside {LUI_T, AUIPC_T, JAL_T, JALR_T, LOAD_T, ARITH_IMM_T, ARITH_T} | is_csr | (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T} & is_cfu) | vfu_uses_rd | is_cfu_csr;
-
-    // rs1  : VMEM [all] - VALU_CFG_T [ OPIVX (all) | OPFVF (all) | OPMVX (all) | OPCFG (vsetvli, vsetvl) ]
-    assign vfu_uses_rs[RS1] = is_vfu & (opcode_trim inside {VLOAD_T, VSTORE_T} |
-                                        (opcode_trim inside {VALU_CFG_T} &
-                                          ((fn3 inside {OPIVX_fn3, OPFVF_fn3, OPMVX_fn3}) | 
-                                             (fn3 inside {OPCFG_fn3} & ((decode.instruction[31] == 1'b0) | 
-                                                                        (decode.instruction[31:25] == 7'b1000000))))));
-    // rs2  : VMEM [strided] - VALU_CFG_T [ OPCFG (vsetvl) ]
-    assign vfu_uses_rs[RS2] = is_vfu & ((opcode_trim inside {VLOAD_T, VSTORE_T} & 
-                                            (decode.instruction[27:26] == V_LS_SE_mop)) | 
-                                          (opcode_trim inside {VALU_CFG_T} & 
-                                            (fn3 inside {OPCFG_fn3} & 
-                                              (decode.instruction[31:25] == 7'b1000000))));
-
-    // rd   : VALU_CFG_T [ OPFVV (vfmv.f.s) | OPMVV (vmv.x.s, vfirst.m, vcpop.m) | OPMVX () | OPCFG (all) ]
-    assign vfu_uses_rd = is_vfu & ((fn3 inside {OPFVV_fn3, OPMVV_fn3} & (fn6 == VW_XF_UNARY0_fn6)) | (fn3 inside {OPCFG_fn3}));
+    assign uses_rs[RS1] = opcode_trim inside {JALR_T, BRANCH_T, LOAD_T, STORE_T, ARITH_IMM_T, ARITH_T, AMO_T} | is_csr | is_cfu & ~(is_cfu_csr & fn3[2]);
+    assign uses_rs[RS2] = opcode_trim inside {BRANCH_T, ARITH_T, AMO_T} | (opcode_trim inside {CUSTOM_0_T, CUSTOM_2_T} & is_cfu);//Stores are exempted due to store forwarding
+    assign uses_rd = opcode_trim inside {LUI_T, AUIPC_T, JAL_T, JALR_T, LOAD_T, ARITH_IMM_T, ARITH_T} | is_csr | (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T} & is_cfu) | is_cfu_csr;
 
     ////////////////////////////////////////////////////
     //Unit Determination
@@ -196,7 +174,7 @@ module decode_and_issue
         assign unit_needed[UNIT_IDS.DIV] = mult_div_op && fn3[2];
     endgenerate
 
-    assign unit_needed[UNIT_IDS.CFU] = is_cfu | is_vfu;
+    assign unit_needed[UNIT_IDS.CFU] = is_cfu;
 
     ////////////////////////////////////////////////////
     //Renamer Support
@@ -568,7 +546,7 @@ module decode_and_issue
 
     // TODO : Drive zero-width output to 0 : req_cfu-id-insn-state
     assign cfu.req_id    = 10'({issue.uses_rd, issue.phys_rd_addr, issue.id});
-    assign cfu.req_func  = cfu_imm_type ? (C_M_CFU_FUNC_ID_W)'(issue.instruction[23:20]) : (C_M_CFU_FUNC_ID_W)'({issue.instruction[31:25], issue.instruction[14:12]});
+    assign cfu.req_func  = cfu_imm_type ? (C_M_CFU_FUNC_ID_W)'(issue.instruction[23:20]) :  (C_M_CFU_FUNC_ID_W)'({issue.instruction[31:25], issue.instruction[14:12]});
     assign cfu.req_insn  = issue.instruction; // TODO : if not CFU, req_insn = 0
     assign cfu.req_data0 = rf.data[RS1];
     assign cfu.req_data1 = cfu_imm_type ? 32'(issue.instruction[31:24]) : rf.data[RS2];
