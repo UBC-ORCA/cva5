@@ -4,3 +4,6 @@
 [submodule "verilog-axi"]
 	path = verilog-axi
 	url = git@github.com:UBC-ORCA/verilog-axi.git
+[submodule "verilog-axis"]
+	path = verilog-axis
+	url = git@github.com:UBC-ORCA/verilog-axis.git
