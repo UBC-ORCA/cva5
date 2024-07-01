@@ -11,6 +11,8 @@ CVA5_INCLUDED_SIM_SRCS = $(addprefix $(VERILATOR_DIR)/, cva5_sim.cc AXI_DDR_simu
 TRACE_ENABLE?=False
 
 
+MPRAM_DIR?=$(CVA5_DIR)/rvv-lite/src/multiported-ram
+
 #Simulation Binary Name
 CVA5_SIM_DIR?=$(VERILATOR_DIR)/build
 CVA5_SIM?=$(CVA5_SIM_DIR)/cva5-sim
@@ -89,7 +91,7 @@ lint-full:
 #Build CVA5 Sim
 $(CVA5_SIM): $(CVA5_HW_SRCS) $(CVA5_SIM_SRCS)
 	mkdir -p $(CVA5_SIM_DIR)
-	verilator --cc --exe --Mdir $(CVA5_SIM_DIR) -DENABLE_SIMULATION_ASSERTIONS --assert \
+	verilator --cc --exe --I$(MPRAM_DIR) --Mdir $(CVA5_SIM_DIR) -DENABLE_SIMULATION_ASSERTIONS --assert \
 		-o cva5-sim \
 		$(VERILATOR_LINT_IGNORE) $(VERILATOR_CFLAGS) \
 		$(CVA5_SIM_SRCS) \

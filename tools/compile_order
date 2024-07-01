@@ -7,8 +7,10 @@ l2_arbiter/l2_interfaces.sv
 l2_arbiter/l2_external_interfaces.sv
 local_memory/local_memory_interface.sv 
 local_memory/local_mem.sv
-cfu/cfu_types.sv
-cfu/cfu_interface.sv
+cx/cxu_types.sv
+cx/cxu_interface.sv
+cx/cx_dma_interfaces.sv
+cx/cx_dma_types.sv
 
 core/internal_interfaces.sv  
 core/external_interfaces.sv  
@@ -46,7 +48,6 @@ core/local_mem_sub_unit.sv
 core/axi_master.sv  
 core/avalon_master.sv  
 core/wishbone_master.sv  
-
 
 core/tag_bank.sv  
 core/dcache_tag_banks.sv  
@@ -94,10 +95,16 @@ core/instruction_metadata_and_id_management.sv
 core/l1_arbiter.sv  
 core/cva5.sv
 
-cfu/cfu_unit.sv
-cfu/mux.sv
-
-cfu/crc.sv
+rvv-lite/src/multiported-ram/config.vh
+rvv-lite/src/multiported-ram/utils.vh
+rvv-lite/src/multiported-ram/mpram_gen.v
+rvv-lite/src/multiported-ram/mpram_gen_be.v
+rvv-lite/src/multiported-ram/dpram.v
+rvv-lite/src/multiported-ram/dpram_be.v
+rvv-lite/src/multiported-ram/mrram.v
+rvv-lite/src/multiported-ram/mrram_be.v
+rvv-lite/src/multiported-ram/mpram_xor.v
+rvv-lite/src/multiported-ram/mpram.v
 
 rvv-lite/src/opcodes.sv
 rvv-lite/src/vALU/avg_unit.sv
@@ -121,10 +128,12 @@ rvv-lite/src/vALU/vReduction.sv
 rvv-lite/src/vALU/vSlide.sv
 rvv-lite/src/vALU/vWiden.sv
 rvv-lite/src/vALU/vALU.sv
+rvv-lite/src/vcfg.sv
 rvv-lite/src/addr_gen_unit.sv
-rvv-lite/src/cfg_unit.sv
-rvv-lite/src/insn_decoder.sv
-rvv-lite/src/vec_regfile.sv
+rvv-lite/src/extract_mask.sv
+rvv-lite/src/generate_be.sv
+rvv-lite/src/read_burst_aligner.sv
+rvv-lite/src/write_burst_aligner.sv
 rvv-lite/src/rvv_proc_main.sv
 
 verilog-axi/rtl/priority_encoder.v
@@ -140,5 +149,11 @@ verilog-axi/rtl/axi_crossbar_wr.v
 verilog-axi/rtl/axi_crossbar.v
 verilog-axi/rtl/axi_ram.v
 
-cfu/vfu.sv
+verilog-axis/rtl/axis_arb_mux.v
+verilog-axis/rtl/axis_demux.v
 
+cx/cx_tracker.sv
+cx/cx_dma_unit.sv
+cx/cx_switch_unit.sv
+
+cx/vxu.sv
