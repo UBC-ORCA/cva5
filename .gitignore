@@ -1,0 +1,4 @@
+build/
+test_benches/verilator/build/
+examples/nexys/scripts/*
+!examples/nexys/scripts/*.tcl
