@@ -3,7 +3,7 @@
 set origin_dir [file dirname [info script]]
 
 # Set the project name
-set _xil_proj_name_ "cva5_nexys_wrapper"
+set _xil_proj_name_ "cva5_wrapper"
 
 set sources_dir $origin_dir/../../../
 
@@ -28,8 +28,8 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 #import sources needed for blackbox packaging
 import_files -norecurse $sources_dir/l2_arbiter/l2_external_interfaces.sv
 import_files -norecurse $sources_dir/local_memory/local_memory_interface.sv
-import_files -norecurse $sources_dir/cfu/cfu_types.sv
-import_files -norecurse $sources_dir/cfu/cfu_interface.sv
+import_files -norecurse $sources_dir/cx/cxu_types.sv
+import_files -norecurse $sources_dir/cx/cxu_interface.sv
 import_files -norecurse $sources_dir/core/external_interfaces.sv
 import_files -norecurse $sources_dir/core/cva5_config.sv
 import_files -norecurse $sources_dir/core/riscv_types.sv
@@ -82,8 +82,8 @@ import_files -force -fileset [get_filesets sources_1] $sources_dir/l2_arbiter/l2
 import_files -force -fileset [get_filesets sources_1] $sources_dir/l2_arbiter/l2_external_interfaces.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/local_memory/local_memory_interface.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/local_memory/local_mem.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/cfu/cfu_types.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/cfu/cfu_interface.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cx/cxu_types.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cx/cxu_interface.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/internal_interfaces.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/external_interfaces.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/lutrams/lutram_1w_1r.sv

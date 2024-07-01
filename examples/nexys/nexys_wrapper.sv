@@ -84,7 +84,7 @@ module nexys_wrapper
     //output logic                          cxu_req_en,
     output logic                          cxu_req_valid,
     input  logic                          cxu_req_ready,
-    output logic [C_M_cxu_req_ID_W-1:0]   cxu_req_id,
+    output logic [C_M_CXU_REQ_ID_W-1:0]   cxu_req_id,
     output logic [C_M_CXU_CXU_ID_W-1:0]   cxu_req_cxu,
     output logic [C_M_CXU_STATE_ID_W-1:0] cxu_req_state,
     output logic [C_M_CXU_FUNC_ID_W-1:0]  cxu_req_func,
@@ -93,7 +93,7 @@ module nexys_wrapper
     output logic [C_M_CXU_DATA_W-1:0]     cxu_req_data1,
     input  logic                          cxu_resp_valid,
     output logic                          cxu_resp_ready,
-    input  logic [C_M_cxu_req_ID_W-1:0]   cxu_resp_id,
+    input  logic [C_M_CXU_REQ_ID_W-1:0]   cxu_resp_id,
     input  logic [C_M_CXU_STATUS_W-1:0]   cxu_resp_status,
     input  logic [C_M_CXU_DATA_W-1:0]     cxu_resp_data
 
