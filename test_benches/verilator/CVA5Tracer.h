@@ -69,7 +69,7 @@ private:
   bool logPC = false;
 
   int reset_length = 64;
-  int stall_limit = 2000;
+  int stall_limit = 10000;
   int stall_count = 0;
   uint64_t cycle_count = 0;
 
