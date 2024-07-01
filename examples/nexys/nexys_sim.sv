@@ -26,7 +26,8 @@ module cva5_sim
     import l2_config_and_types::*;
     import riscv_types::*;
     import cva5_types::*;
-    import cfu_types::*;
+    import cxu_types::*;
+    import cx_dma_types::*;
 
     # (
         parameter MEMORY_FILE = "/home/brumaire/RISCV/cva5pr/embench/build/bin/crc32.hw_init"
@@ -39,7 +40,7 @@ module cva5_sim
         output logic [31:0]ddr_axi_araddr,
         output logic [1:0]ddr_axi_arburst,
         output logic [3:0]ddr_axi_arcache,
-        output logic [6:0]ddr_axi_arid,
+        output logic [1+1+16-1:0]ddr_axi_arid,
         output logic [7:0]ddr_axi_arlen,
         output logic [0:0]ddr_axi_arlock,
         output logic [2:0]ddr_axi_arprot,
@@ -51,7 +52,7 @@ module cva5_sim
         output logic [31:0]ddr_axi_awaddr,
         output logic [1:0]ddr_axi_awburst,
         output logic [3:0]ddr_axi_awcache,
-        output logic [6:0]ddr_axi_awid,
+        output logic [1+1+16-1:0]ddr_axi_awid,
         output logic [7:0]ddr_axi_awlen,
         output logic [0:0]ddr_axi_awlock,
         output logic [2:0]ddr_axi_awprot,
@@ -60,12 +61,12 @@ module cva5_sim
         output logic [3:0]ddr_axi_awregion,
         output logic [2:0]ddr_axi_awsize,
         output logic ddr_axi_awvalid,
-        input logic [6:0]ddr_axi_bid,
+        input logic [1+1+16-1:0]ddr_axi_bid,
         input logic [1:0]ddr_axi_bresp,
         input logic ddr_axi_bvalid,
         output logic ddr_axi_bready,
         input logic [31:0]ddr_axi_rdata,
-        input logic [6:0]ddr_axi_rid,
+        input logic [1+1+16-1:0]ddr_axi_rid,
         input logic ddr_axi_rlast,
         output logic ddr_axi_rready,
         input logic [1:0]ddr_axi_rresp,
@@ -75,7 +76,7 @@ module cva5_sim
         input logic ddr_axi_wready,
         output logic [3:0]ddr_axi_wstrb,
         output logic ddr_axi_wvalid,
-        output logic [6:0]ddr_axi_wid,
+        output logic [1+1+16-1:0]ddr_axi_wid,
 
         //Local Memory
         output logic [29:0] instruction_bram_addr,
@@ -101,6 +102,11 @@ module cva5_sim
         output logic retire_ports_valid [RETIRE_PORTS],
         output logic store_queue_empty
     );
+
+    genvar k;
+
+    localparam NUM_CXUS = 2;
+    localparam CXU_ID_WIDTH = NUM_CXUS > 1 ? $clog2(NUM_CXUS) : 1;
 
     localparam cpu_config_t NEXYS_CONFIG = '{
         //ISA options
@@ -136,7 +142,7 @@ module cva5_sim
             H : 32'h87FFFFFF
         },
         ICACHE : '{
-            LINES : 512,
+            LINES : 256,
             LINE_W : 4,
             WAYS : 2,
             USE_EXTERNAL_INVALIDATIONS : 0,
@@ -158,11 +164,11 @@ module cva5_sim
         DCACHE : '{
             LINES : 1024,
             LINE_W : 4,
-            WAYS : 1,
+            WAYS : 2,
             USE_EXTERNAL_INVALIDATIONS : 1,
             USE_NON_CACHEABLE : 1,
             NON_CACHEABLE : '{
-				L : 32'h88000000, 
+				L : 32'h80000000, // -> 32'h80000000 when running rvv-tests
 				H : 32'h8FFFFFFF
             }
         },
@@ -221,14 +227,12 @@ module cva5_sim
     wishbone_interface iwishbone();
 
     //L2 and AXI
-    axi_interface axi ();
+    axi_interface #(.ID_WIDTH(CXU_ID_WIDTH + MEM_ID_WIDTH)) axi ();
     l2_requester_interface l2 ();
 
-    // AXI64
-    axi64_interface axi64 ();
-
-    // CFU
-    cfu_interface cfu ();
+    // CXU
+    cxu_interface cxu ();
+    cxu_interface cxus [NUM_CXUS] ();
 
     // INVALIDATION
     logic inv_ack;
@@ -250,16 +254,93 @@ module cva5_sim
     l1_to_axi  arb(.*, .cpu(l2), .axi(axi));
     cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*);
 
-    /*
-    * CFU CRC
-    crc crc_block(.*);
-    */
+    for (k = 0; k < NUM_CXUS; ++k) begin
+      vfu 
+      vfu_block (
+        .i_clk(clk),
+        .i_rst(rst),
+        .s_cxu(cxus[k]),
+        .s_alloc_resp(alloc_resps[k]),
+        .s_lkup_resp(lkup_resps[k]),
+        .m_alloc_req(alloc_reqs[k]),
+        .m_lkup_req(lkup_reqs[k]),
+        .m_read_req(read_reqs[k]),
+        .m_write_req(write_reqs[k]),
+        .s_read_stream(read_streams[k]),
+        .m_write_stream(write_streams[k]));
+    end
 
-    /* 
-    * VFU
-    */
-    vfu vfu_block(.*);
+    cx_switch_unit #(
+      .NUM_SLAVES(2))
+    cx_switch_unit_block (
+      .i_clk(clk),
+      .i_rst(rst),
+      .i_cxu(cxu),
+      .o_cxus(cxus));
 
+    //FIXME
+    assign inv_valid = 0;
+    assign inv_addr = 0;
+
+    ////////////////////////////////////////////////////
+    // DMA
+    ////////////////////////////////////////////////////
+
+    gen_interface #(
+      .DATA_WIDTH($bits(track_entry_t)), 
+      .ID_WIDTH(CXU_ID_WIDTH))
+    alloc_reqs [NUM_CXUS] ();
+    gen_interface #(
+      .DATA_WIDTH($bits(track_id_t)), 
+      .ID_WIDTH(CXU_ID_WIDTH)) 
+    alloc_resps [NUM_CXUS] ();
+    gen_interface #(
+      .DATA_WIDTH($bits(track_entry_t)),
+      .ID_WIDTH(CXU_ID_WIDTH)) 
+    lkup_reqs [NUM_CXUS] ();
+    gen_interface #(
+      .DATA_WIDTH(1),                     
+      .ID_WIDTH(CXU_ID_WIDTH))
+    lkup_resps [NUM_CXUS] ();
+
+    gen_interface #(
+      .DATA_WIDTH($bits(mem_packet_t)),   
+      .ID_WIDTH(CXU_ID_WIDTH+MEM_ID_WIDTH)) 
+    read_reqs [NUM_CXUS] ();
+    gen_interface #(
+      .DATA_WIDTH($bits(mem_packet_t)),   
+      .ID_WIDTH(CXU_ID_WIDTH+MEM_ID_WIDTH)) 
+    write_reqs [NUM_CXUS] ();
+    gen_interface #(
+      .DATA_WIDTH($bits(mem_packet_t)),   
+      .ID_WIDTH(CXU_ID_WIDTH+MEM_ID_WIDTH)) 
+    mem_reqs [MEM_PORTS] ();
+
+    stream_interface #(
+      .DATA_WIDTH(MEM_DATA_WIDTH),   
+      .ID_WIDTH(MEM_ID_WIDTH))
+    write_streams [NUM_CXUS] ();
+    stream_interface #(
+      .DATA_WIDTH(MEM_DATA_WIDTH),   
+      .ID_WIDTH(MEM_ID_WIDTH))
+    read_streams [NUM_CXUS] ();
+    axi64_interface #(
+      .ID_WIDTH(CXU_ID_WIDTH+MEM_ID_WIDTH))
+    axi64 ();
+
+    cx_dma_unit #(.NUM_CXUS(NUM_CXUS))
+    cx_dma_unit_block (
+      .i_clk(clk),
+      .i_rst(rst),
+      .m_axi(axi64),
+      .m_alloc_resps(alloc_resps),
+      .m_lkup_resps(lkup_resps),
+      .s_alloc_reqs(alloc_reqs),
+      .s_lkup_reqs(lkup_reqs),
+      .s_read_reqs(read_reqs),
+      .s_write_reqs(write_reqs),
+      .m_read_streams(read_streams),
+      .s_write_streams(write_streams));
 
     ////////////////////////////////////////////////////
     //AXI adapter
@@ -269,7 +350,7 @@ module cva5_sim
     localparam S_STRB_WIDTH_ADAPT = (S_DATA_WIDTH_ADAPT/8);
     localparam M_DATA_WIDTH_ADAPT = 32;
     localparam M_STRB_WIDTH_ADAPT = (M_DATA_WIDTH_ADAPT/8);
-    localparam ID_WIDTH_ADAPT = 6;
+    localparam ID_WIDTH_ADAPT = CXU_ID_WIDTH + MEM_ID_WIDTH;
     localparam AWUSER_ENABLE_ADAPT = 0;
     localparam AWUSER_WIDTH_ADAPT = 1;
     localparam WUSER_ENABLE_ADAPT = 0;
@@ -543,7 +624,7 @@ module cva5_sim
     localparam DATA_WIDTH_XBAR = 32;
     localparam ADDR_WIDTH_XBAR = 32;
     localparam STRB_WIDTH_XBAR = (DATA_WIDTH_XBAR/8);
-    localparam S_ID_WIDTH_XBAR = 6;
+    localparam S_ID_WIDTH_XBAR = CXU_ID_WIDTH + MEM_ID_WIDTH;
     localparam M_ID_WIDTH_XBAR = S_ID_WIDTH_XBAR+$clog2(S_COUNT_XBAR);
     localparam AWUSER_ENABLE_XBAR = 0;
     localparam AWUSER_WIDTH_XBAR = 1;
