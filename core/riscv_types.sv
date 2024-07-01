@@ -159,9 +159,9 @@ package riscv_types;
         MIP = 12'h344,
 
 
-        //Machine CFU regs
-        MCFU_SELECTOR = 12'hBC0,
-        MCFU_SELECTOR_TABLE = 12'hBC1,
+        //Machine CX regs
+        MCX_SELECTOR = 12'hBC0,
+        MCX_TABLE = 12'hBC1,
 
         //Machine Counters
         MCYCLE = 12'hB00,
@@ -199,9 +199,9 @@ package riscv_types;
         CYCLEH = 12'hC80,
         TIMEH = 12'hC81,
         INSTRETH = 12'hC82,
-        //User CFU regs
-        CFU_SELECTOR_INDEX = 12'h800,
-        CFU_STATUS = 12'h801,
+        //User CX regs
+        CX_INDEX = 12'h800,
+        CX_STATUS = 12'h801,
 
         //Debug regs
         DCSR = 12'h7B0,

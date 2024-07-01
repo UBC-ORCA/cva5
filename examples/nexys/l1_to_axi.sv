@@ -96,9 +96,9 @@ module l1_to_axi
 
     ////////////////////////////////////////////////////
     //AXI
-    localparam MAX_WRITE_IN_FLIGHT = 64;
-    logic [$clog2(MAX_WRITE_IN_FLIGHT)-1:0] write_in_flight_count;
-    logic [$clog2(MAX_WRITE_IN_FLIGHT)-1:0] write_in_flight_count_next;
+    localparam MAX_WRITE_IN_FLIGHT = 512;
+    logic [$clog2(MAX_WRITE_IN_FLIGHT)+1-1:0] write_in_flight_count;
+    logic [$clog2(MAX_WRITE_IN_FLIGHT)+1-1:0] write_in_flight_count_next;
 
     logic [4:0] burst_size;
     assign burst_size = request.amo_type_or_burst_size;
@@ -153,16 +153,34 @@ module l1_to_axi
         if (rst)
             write_in_flight_count <= 0;
         else
-            write_in_flight_count <= write_in_flight_count + $clog2(MAX_WRITE_IN_FLIGHT)'({(aw_complete | aw_complete_r) & (w_complete | w_complete_r)}) - $clog2(MAX_WRITE_IN_FLIGHT)'(axi.bvalid);
+            write_in_flight_count <= write_in_flight_count + ($clog2(MAX_WRITE_IN_FLIGHT)+1)'({(aw_complete | aw_complete_r) & (w_complete | w_complete_r)}) - ($clog2(MAX_WRITE_IN_FLIGHT)+1)'(axi.bvalid);
     end
-    
+
     assign write_pop = (aw_complete | aw_complete_r) & (w_complete | w_complete_r);
 
-    assign cpu.wr_in_flight = write_in_flight_count != 0;
+    ////////////////////////////////////////////////////
+    // Reads and writes in flight
+    ////////////////////////////////////////////////////
 
-    assign cpu.inv_valid = inv_valid;
-    assign cpu.inv_addr  = inv_addr[32-1:2];
-    assign inv_ack = cpu.inv_ack;
+    localparam MAX_READS  = 512;
+    localparam MAX_WRITES = 512;
+
+    logic  [$clog2(MAX_READS)+1-1:0] reads_count;
+    logic [$clog2(MAX_WRITES)+1-1:0] writes_count;
+
+    always_ff @ (posedge clk) begin
+      reads_count  <= reads_count  + ($clog2(MAX_READS)+1)'(axi.arready & axi.arvalid) - 
+                                     ($clog2(MAX_READS)+1)'(axi.rready & axi.rvalid & axi.rlast);
+      writes_count <= writes_count + ($clog2(MAX_WRITES)+1)'(axi.awready & axi.awvalid) - 
+                                     ($clog2(MAX_WRITES)+1)'(axi.bready & axi.bvalid);
+      if (rst) begin
+        reads_count  <= 0;
+        writes_count <= 0;
+      end
+    end
+
+    assign cpu.rd_in_flight = request_fifo.valid ||  reads_count != 0;
+    assign cpu.wr_in_flight = request_fifo.valid || writes_count != 0;
 
     ////////////////////////////////////////////////////
     //Return Path

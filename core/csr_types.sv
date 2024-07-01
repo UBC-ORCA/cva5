@@ -164,8 +164,8 @@ package csr_types;
         logic [30:24] reserved;
         logic [23:16] state_id;
         logic [15:8] reserved1;
-        logic [7:0] cfu_id;
-    } mcfu_selector_t;
+        logic [7:0] cxu_id;
+    } mcx_selector_t;
     
     ////////////////////////////
     /////     OPTIONAL     /////
@@ -173,12 +173,12 @@ package csr_types;
     typedef struct packed {
         logic [31:12] base_page;
         logic [11:0] zeros;
-    } mcfu_selector_table_t;
+    } mcx_table_t;
    
     typedef struct packed {
         logic [31:10] reserved;
         logic [9:0] index;
-    } cfu_selector_index_t;
+    } cx_index_t;
     ////////////////////////////
 
     typedef struct packed {
@@ -189,7 +189,7 @@ package csr_types;
         logic OF;
         logic SI;
         logic CI;
-    } cfu_status_t;
+    } cx_status_t;
 
     typedef struct packed {
         logic mode;

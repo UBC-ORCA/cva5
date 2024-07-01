@@ -54,7 +54,7 @@ module load_store_unit
 
         local_memory_interface.master data_bram,
 
-        input logic vstore_hold,
+        input logic cxu_fence_hold,
 
         //Writeback-Store Interface
         input wb_packet_t wb_snoop,
@@ -260,7 +260,7 @@ module load_store_unit
     assign sub_unit_ready = unit_ready[subunit_id] & (~unit_switch_hold);
     assign load_complete = |unit_data_valid;
 
-    assign issue.ready = (~tlb_on | tlb.ready) & (~lsq.full) & (~fence_hold) & (~exception.valid) & (~vstore_hold);
+    assign issue.ready = (~tlb_on | tlb.ready) & (~lsq.full) & (~fence_hold) & (~exception.valid) & (~cxu_fence_hold);
 
     assign sub_unit_load_issue = sel_load & lsq.load_valid & sub_unit_ready & sub_unit_address_match[subunit_id];
     assign sub_unit_store_issue = (lsq.store_valid & ~sel_load) & sub_unit_ready & sub_unit_address_match[subunit_id];

@@ -80,7 +80,7 @@ module lfsr
     end
     endgenerate
 
-    initial value = 0;
+    //initial value = 0;
     always_ff @ (posedge clk) begin
         if (NEEDS_RESET & rst)
             value <= '0;

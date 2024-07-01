@@ -26,7 +26,7 @@ module decode_and_issue
     import riscv_types::*;
     import cva5_types::*;
     import csr_types::*;
-    import cfu_types::*;
+    import cxu_types::*;
 
     # (
         parameter cpu_config_t CONFIG = EXAMPLE_CONFIG,
@@ -67,6 +67,7 @@ module decode_and_issue
         output csr_inputs_t csr_inputs,
         output mul_inputs_t mul_inputs,
         output div_inputs_t div_inputs,
+        output fence_details_t fence_details,
         
         unit_issue_interface.decode unit_issue [NUM_UNITS-1:0],
 
@@ -75,8 +76,9 @@ module decode_and_issue
 
         exception_interface.unit exception,
 
-        //CFU
-        cfu_interface cfu
+        //CXU
+        input logic cxu_req_en,
+        cxu_interface.master cxu
     );
 
     logic [2:0] fn3;
@@ -89,7 +91,7 @@ module decode_and_issue
 
     ///////////////////////////////////////
     // VFU
-    logic is_vfu;
+    logic is_vx;
     logic vfu_uses_rs [REGFILE_READ_PORTS];
     logic vfu_uses_rd;
 
@@ -97,8 +99,8 @@ module decode_and_issue
     rs_addr_t rd_addr;
 
     logic is_csr;
-    logic is_cfu_csr; // NOTE: Use?
-    logic is_cfu;
+    logic is_cx_csr; // NOTE: Use?
+    logic is_cx;
     logic is_fence;
     logic is_ifence;
     logic csr_imm_op;
@@ -146,36 +148,56 @@ module decode_and_issue
     assign rs_addr[RS2] = decode.instruction[24:20];
     assign rd_addr = decode.instruction[11:7];
 
-    assign is_cfu_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & (csr_addr inside {CUSTOM_URW_CSR});
-    assign is_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & ~is_cfu_csr;
-    assign is_cfu = (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T, CUSTOM_2_T} | is_cfu_csr) & cfu.req_en;
-    assign is_vfu = opcode_trim inside {VALU_CFG_T, VLOAD_T, VSTORE_T} & cfu.req_en;
+    /*
+    logic [31:0] myinsn;
+
+    always_comb begin
+      if (is_vx) begin
+        if (decode.instruction inside {VSTORE}) begin
+          myinsn = 32'h27864c57;
+        //end else if (decode.instruction inside {VLOAD}) begin
+        //  myinsn = 32'h27c6ce57;
+        end else begin
+          myinsn = decode.instruction;
+        end
+      end else begin
+        myinsn = decode.instruction;
+      end
+
+      assign rs_addr[RS1] = myinsn[19:15];
+    end
+    */
+
+    assign is_cx_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & (csr_addr inside {CUSTOM_URW_CSR});
+    assign is_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & ~is_cx_csr;
+    assign is_cx = (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T, CUSTOM_2_T} | is_cx_csr) & cxu_req_en;
+    assign is_vx = opcode_trim inside {VALU_CFG_T, VLOAD_T, VSTORE_T} & cxu_req_en;
     assign is_fence = (opcode_trim == FENCE_T) & ~fn3[0];
     assign is_ifence = CONFIG.INCLUDE_IFENCE & (opcode_trim == FENCE_T) & fn3[0];
-    assign csr_imm_op = (opcode_trim == SYSTEM_T) & fn3[2] & ~is_cfu_csr;
-    assign environment_op = (opcode_trim == SYSTEM_T) & (fn3 == 0) & ~is_cfu_csr;
+    assign csr_imm_op = (opcode_trim == SYSTEM_T) & fn3[2] & ~is_cx_csr;
+    assign environment_op = (opcode_trim == SYSTEM_T) & (fn3 == 0) & ~is_cx_csr;
 
     ////////////////////////////////////////////////////
     //Register File Support
-    assign uses_rs[RS1] = opcode_trim inside {JALR_T, BRANCH_T, LOAD_T, STORE_T, ARITH_IMM_T, ARITH_T, AMO_T} | is_csr | is_cfu & ~(is_cfu_csr & fn3[2])| vfu_uses_rs[RS1];
-    assign uses_rs[RS2] = opcode_trim inside {BRANCH_T, ARITH_T, AMO_T} | (opcode_trim inside {CUSTOM_0_T, CUSTOM_2_T} & is_cfu) | vfu_uses_rs[RS2];//Stores are exempted due to store forwarding
-    assign uses_rd = opcode_trim inside {LUI_T, AUIPC_T, JAL_T, JALR_T, LOAD_T, ARITH_IMM_T, ARITH_T} | is_csr | (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T} & is_cfu) | vfu_uses_rd | is_cfu_csr;
+    assign uses_rs[RS1] = opcode_trim inside {JALR_T, BRANCH_T, LOAD_T, STORE_T, ARITH_IMM_T, ARITH_T, AMO_T} | is_csr | is_cx & ~(is_cx_csr & fn3[2])| vfu_uses_rs[RS1];
+    assign uses_rs[RS2] = opcode_trim inside {BRANCH_T, ARITH_T, AMO_T} | (opcode_trim inside {CUSTOM_0_T, CUSTOM_2_T} & is_cx) | vfu_uses_rs[RS2];//Stores are exempted due to store forwarding
+    assign uses_rd = opcode_trim inside {LUI_T, AUIPC_T, JAL_T, JALR_T, LOAD_T, ARITH_IMM_T, ARITH_T} | is_csr | (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T} & is_cx) | vfu_uses_rd | is_cx_csr;
 
     // rs1  : VMEM [all] - VALU_CFG_T [ OPIVX (all) | OPFVF (all) | OPMVX (all) | OPCFG (vsetvli, vsetvl) ]
-    assign vfu_uses_rs[RS1] = is_vfu & (opcode_trim inside {VLOAD_T, VSTORE_T} |
+    assign vfu_uses_rs[RS1] = is_vx & (opcode_trim inside {VLOAD_T, VSTORE_T} |
                                         (opcode_trim inside {VALU_CFG_T} &
                                           ((fn3 inside {OPIVX_fn3, OPFVF_fn3, OPMVX_fn3}) | 
                                              (fn3 inside {OPCFG_fn3} & ((decode.instruction[31] == 1'b0) | 
                                                                         (decode.instruction[31:25] == 7'b1000000))))));
     // rs2  : VMEM [strided] - VALU_CFG_T [ OPCFG (vsetvl) ]
-    assign vfu_uses_rs[RS2] = is_vfu & ((opcode_trim inside {VLOAD_T, VSTORE_T} & 
+    assign vfu_uses_rs[RS2] = is_vx & ((opcode_trim inside {VLOAD_T, VSTORE_T} & 
                                             (decode.instruction[27:26] == V_LS_SE_mop)) | 
                                           (opcode_trim inside {VALU_CFG_T} & 
                                             (fn3 inside {OPCFG_fn3} & 
                                               (decode.instruction[31:25] == 7'b1000000))));
 
-    // rd   : VALU_CFG_T [ OPFVV (vfmv.f.s) | OPMVV (vmv.x.s, vfirst.m, vcpop.m) | OPMVX () | OPCFG (all) ]
-    assign vfu_uses_rd = is_vfu & opcode_trim inside {VALU_CFG_T} & ((fn3 inside {OPFVV_fn3, OPMVV_fn3} & (fn6 == VW_XF_UNARY0_fn6)) | (fn3 inside {OPCFG_fn3}));
+    // rd   : VALU_CFG_T [ OPFVV (vfmv.f.s) | OPMVV (vmv.x.s, vfirst.m, vcpop.m) | OPMVX () | OPCFG (all but rd=rs1=0) ]
+    assign vfu_uses_rd = is_vx & opcode_trim inside {VALU_CFG_T} & ((fn3 inside {OPFVV_fn3, OPMVV_fn3} & (fn6 == VW_XF_UNARY0_fn6)) | (fn3 inside {OPCFG_fn3} & ((decode.instruction[31:30] == 2'b11) | ((decode.instruction[31:30] != 2'b11) & ~(decode.instruction[19:15] == 5'd0 && decode.instruction[11:7] == 5'd0)))));
 
     ////////////////////////////////////////////////////
     //Unit Determination
@@ -185,7 +207,7 @@ module decode_and_issue
     generate if (CONFIG.INCLUDE_CSRS)
         assign unit_needed[UNIT_IDS.CSR] = is_csr;
     endgenerate
-    assign unit_needed[UNIT_IDS.IEC] = (opcode_trim inside {SYSTEM_T} & ~is_csr & CONFIG.INCLUDE_M_MODE & ~is_cfu_csr) | is_ifence;
+    assign unit_needed[UNIT_IDS.IEC] = (opcode_trim inside {SYSTEM_T} & ~is_csr & CONFIG.INCLUDE_M_MODE & ~is_cx_csr) | is_ifence;
 
     assign mult_div_op = (opcode_trim == ARITH_T) && decode.instruction[25];
     generate if (CONFIG.INCLUDE_MUL)
@@ -196,7 +218,7 @@ module decode_and_issue
         assign unit_needed[UNIT_IDS.DIV] = mult_div_op && fn3[2];
     endgenerate
 
-    assign unit_needed[UNIT_IDS.CFU] = is_cfu | is_vfu;
+    assign unit_needed[UNIT_IDS.CXU] = is_cx | is_vx;
 
     ////////////////////////////////////////////////////
     //Renamer Support
@@ -374,9 +396,13 @@ module decode_and_issue
     logic is_load_r;
     logic is_store_r;
     logic is_fence_r;
+
     always_ff @(posedge clk) begin
         if (issue_stage_ready) begin
             ls_offset <= opcode[5] ? {decode.instruction[31:25], decode.instruction[11:7]} : decode.instruction[31:20];
+            fence_details.fm   <= decode.instruction[31:28];
+            fence_details.pred <= decode.instruction[27:24];
+            fence_details.succ <= decode.instruction[23:20];
             is_load_r <= is_load;
             is_store_r <= is_store;
             is_fence_r <= is_fence;
@@ -562,23 +588,40 @@ module decode_and_issue
     end endgenerate
     
     ////////////////////////////////////////////////////
-    //CFU
-    logic cfu_imm_type;
-    logic is_cfu_csr_r;
+    //CXU
+    logic cx_imm_type;
+    logic is_cx_csr_r;
 
-    // TODO : Drive zero-width output to 0 : req_cfu-id-insn-state
-    assign cfu.req_id    = 10'({issue.uses_rd, issue.phys_rd_addr, issue.id});
-    assign cfu.req_func  = cfu_imm_type ? (C_M_CFU_FUNC_ID_W)'({issue.instruction[31:25], issue.instruction[14:12]}) : (C_M_CFU_FUNC_ID_W)'(issue.instruction[23:20]);
-    assign cfu.req_insn  = issue.instruction; // TODO : if not CFU, req_insn = 0
-    assign cfu.req_data0 = rf.data[RS1];
-    assign cfu.req_data1 = cfu_imm_type ? 32'(issue.instruction[31:24]) : rf.data[RS2];
-    assign cfu.req_valid = unit_issue[UNIT_IDS.CFU].new_request;
-    assign cfu.req_cfu_csr = is_cfu_csr_r;
+    // TODO : Drive zero-width output to 0 : req_cxu-id-insn-state
+    assign cxu.req_id    = 10'({issue.uses_rd, issue.phys_rd_addr, issue.id});
+    assign cxu.req_func  = cx_imm_type ? (C_M_CXU_FUNC_ID_W)'(issue.instruction[23:20]) :  (C_M_CXU_FUNC_ID_W)'({issue.instruction[31:25], issue.instruction[14:12]});
+    assign cxu.req_insn  = issue.instruction; // TODO : if not CXU, req_insn = 0
+    assign cxu.req_data0 = rf.data[RS1];
+    assign cxu.req_data1 = cx_imm_type ? 32'(issue.instruction[31:24]) : rf.data[RS2];
+    assign cxu.req_valid = unit_issue[UNIT_IDS.CXU].new_request;
+
+    localparam [31:0] VSETVLI         = 32'b0????????????????_111_?????_1010111;
+    localparam [31:0] VSETIVLI        = 32'b11???????????????_111_?????_1010111;
+    localparam [31:0] VSETVL          = 32'b1000000??????????_111_?????_1010111;
+    localparam [31:0] VLOAD           = 32'b???_?_??_?_?????_?????_???_?????_0000111;
+    localparam [31:0] VSTORE          = 32'b???_?_??_?_?????_?????_???_?????_0100111;
+
+    /*
+    always_comb begin
+      if (issue.instruction inside {VSTORE}) begin
+        cxu.req_insn = 32'h27864c57;
+      //end else if (issue.instruction inside {VLOAD}) begin
+      //  cxu.req_insn = 32'h27c6ce57;
+      end else begin
+        cxu.req_insn = issue.instruction;
+      end
+    end
+    */
     
     always_ff @(posedge clk) begin
       if (issue_stage_ready) begin 
-        cfu_imm_type <= opcode_trim inside {CUSTOM_1_T} & is_cfu; 
-        is_cfu_csr_r <= is_cfu_csr;
+        cx_imm_type <= opcode_trim inside {CUSTOM_1_T} & is_cx; 
+        is_cx_csr_r <= is_cx_csr;
       end
     end
 

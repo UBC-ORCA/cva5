@@ -28,6 +28,7 @@ module cva5
     import l2_config_and_types::*;
     import riscv_types::*;
     import cva5_types::*;
+    import cxu_types::*;
 
     #(
         parameter cpu_config_t CONFIG = EXAMPLE_CONFIG
@@ -47,7 +48,7 @@ module cva5
 
 
         l2_requester_interface.master l2,
-        cfu_interface cfu,
+        cxu_interface.master cxu,
 
         input interrupt_t s_interrupt,
         input interrupt_t m_interrupt
@@ -64,9 +65,9 @@ module cva5
     localparam int unsigned CSR_UNIT_ID = LS_UNIT_ID + int'(CONFIG.INCLUDE_CSRS);
     localparam int unsigned MUL_UNIT_ID = CSR_UNIT_ID + int'(CONFIG.INCLUDE_MUL);
     localparam int unsigned DIV_UNIT_ID = MUL_UNIT_ID + int'(CONFIG.INCLUDE_DIV);
-    localparam int unsigned CFU_UNIT_ID = DIV_UNIT_ID + 1;
+    localparam int unsigned CXU_UNIT_ID = DIV_UNIT_ID + 1;
     //Non-writeback units
-    localparam int unsigned BRANCH_UNIT_ID = CFU_UNIT_ID + 1;
+    localparam int unsigned BRANCH_UNIT_ID = CXU_UNIT_ID + 1;
     localparam int unsigned IEC_UNIT_ID = BRANCH_UNIT_ID + 1;
 
     //Total number of units
@@ -78,7 +79,7 @@ module cva5
         CSR : CSR_UNIT_ID,
         MUL : MUL_UNIT_ID,
         DIV : DIV_UNIT_ID,
-        CFU : CFU_UNIT_ID,
+        CXU : CXU_UNIT_ID,
         BR  : BRANCH_UNIT_ID,
         IEC : IEC_UNIT_ID
     };
@@ -87,7 +88,7 @@ module cva5
     //Writeback Port Assignment
     //
     localparam int unsigned NUM_WB_UNITS_GROUP_1 = 1;//ALU
-    localparam int unsigned NUM_WB_UNITS_GROUP_2 = 1 /* LS */ + int'(CONFIG.INCLUDE_CSRS) + int'(CONFIG.INCLUDE_MUL) + int'(CONFIG.INCLUDE_DIV) + 1 /* CFU */;
+    localparam int unsigned NUM_WB_UNITS_GROUP_2 = 1 /* LS */ + int'(CONFIG.INCLUDE_CSRS) + int'(CONFIG.INCLUDE_MUL) + int'(CONFIG.INCLUDE_DIV) + 1 /* CXU */;
 
     localparam int unsigned NUM_WB_UNITS = NUM_WB_UNITS_GROUP_1 + NUM_WB_UNITS_GROUP_2;
 
@@ -118,6 +119,7 @@ module cva5
     div_inputs_t div_inputs;
     gc_inputs_t gc_inputs;
     csr_inputs_t csr_inputs;
+    fence_details_t fence_details;
 
     unit_issue_interface unit_issue [NUM_UNITS-1:0]();
 
@@ -372,11 +374,13 @@ module cva5
         .csr_inputs (csr_inputs),
         .mul_inputs (mul_inputs),
         .div_inputs (div_inputs),
+        .fence_details (fence_details),
         .unit_issue (unit_issue),
         .gc (gc),
         .current_privilege (current_privilege),
         .exception (exception[PRE_ISSUE_EXCEPTION]),
-        .cfu (cfu)
+        .cxu_req_en (cxu_req_en),
+        .cxu (cxu)
     );
 
     ////////////////////////////////////////////////////
@@ -436,7 +440,7 @@ module cva5
         .m_avalon (m_avalon),
         .dwishbone (dwishbone),                                       
         .data_bram (data_bram),
-        .vstore_hold (vstore_hold),
+        .cxu_fence_hold (cxu_fence_hold),
         .wb_snoop (wb_snoop),
         .retire_ids (retire_ids),
         .retire_port_valid(retire_port_valid),
@@ -498,7 +502,8 @@ module cva5
             .retire_ids(retire_ids),
             .s_interrupt(s_interrupt),
             .m_interrupt(m_interrupt),
-            .cfu(cfu)
+            .cxu_req_en (cxu_req_en),
+            .cxu(cxu)
         );
     end endgenerate
 
@@ -547,47 +552,81 @@ module cva5
         );
     end endgenerate
 
-    logic cfu_wb;
+    logic cxu_req_en;
+    logic cxu_wb;
 
-    assign {cfu_wb, unit_wb[UNIT_IDS.CFU].phys_addr, unit_wb[UNIT_IDS.CFU].id} = cfu.resp_id;
-    assign unit_wb[UNIT_IDS.CFU].rd = cfu.resp_data;
-    assign unit_wb[UNIT_IDS.CFU].done = cfu.resp_valid & cfu_wb;
+    assign {cxu_wb, unit_wb[UNIT_IDS.CXU].phys_addr, unit_wb[UNIT_IDS.CXU].id} = cxu.resp_id;
+    assign unit_wb[UNIT_IDS.CXU].rd = cxu.resp_data;
+    assign unit_wb[UNIT_IDS.CXU].done = cxu.resp_valid & cxu_wb;
 
-    assign cfu.resp_ready = unit_wb[UNIT_IDS.CFU].done ? unit_wb[UNIT_IDS.CFU].ack : 1'b1;
+    assign cxu.resp_ready = unit_wb[UNIT_IDS.CXU].done ? unit_wb[UNIT_IDS.CXU].ack : 1'b1;
 
     always_comb begin
-      if (cfu.req_id[LOG2_MAX_IDS-1:0] != retire_ids[0]) begin
-        unit_issue[UNIT_IDS.CFU].ready = 1'b0;
-      end else if (cfu.req_insn[6:2] inside {VLOAD_T, VSTORE_T} && l2.wr_in_flight) begin
-        unit_issue[UNIT_IDS.CFU].ready = 1'b0;
+      if (cxu.req_id[LOG2_MAX_IDS-1:0] != retire_ids[0]) begin
+        unit_issue[UNIT_IDS.CXU].ready = 1'b0;
+      end else if (cxu.req_insn[6:2] inside {VLOAD_T} && io_fence_hold[READ]) begin
+        unit_issue[UNIT_IDS.CXU].ready = 1'b0;
+      end else if (cxu.req_insn[6:2] inside {VSTORE_T} && io_fence_hold[WRITE]) begin
+        unit_issue[UNIT_IDS.CXU].ready = 1'b0;
       end else begin
-        unit_issue[UNIT_IDS.CFU].ready = cfu.req_ready;
+        unit_issue[UNIT_IDS.CXU].ready = cxu.req_ready;
       end
     end
 
-    id_t vstore_id;
-    logic vstore_hold;
+    localparam [32-1:0] CX_REG = 32'b???????_?????_?????_???_?????_0001011;
+    localparam [10-1:0] CX_FUNC_FENCE_SCALAR = 10'b111111000?;
 
-    always_ff @ (posedge clk) begin
-      if (vstore_id == cfu.resp_id[LOG2_MAX_IDS-1:0] && cfu.resp_valid) begin
-        vstore_hold <= 1'b0;
+    logic cxu_fence_hold;
+    fifo_interface #(.DATA_WIDTH(C_M_CXU_REQ_ID_W)) cxu_fence_id_fifo ();
+
+    always_comb begin
+      cxu_fence_id_fifo.potential_push = cxu.req_ready & cxu.req_valid & 
+                                         cxu.req_insn inside {CX_REG} & 
+                                         cxu.req_func inside {CX_FUNC_FENCE_SCALAR};
+      cxu_fence_id_fifo.push = cxu_fence_id_fifo.potential_push;
+      cxu_fence_id_fifo.data_in = cxu.req_id;
+      cxu_fence_id_fifo.potential_pop = cxu.resp_ready & cxu.resp_valid & cxu_fence_id_fifo.valid &
+                                        cxu.resp_id == cxu_fence_id_fifo.data_out;
+      cxu_fence_id_fifo.pop = cxu_fence_id_fifo.potential_pop;
+      cxu_fence_hold = cxu_fence_id_fifo.valid;
+    end
+
+    cva5_fifo #(.DATA_WIDTH(C_M_CXU_REQ_ID_W), .FIFO_DEPTH(1)) cxu_fence_id_fifo_block (
+        .clk (clk),
+        .rst (rst),
+        .fifo (cxu_fence_id_fifo));
+
+    typedef enum bit {
+      READ  = 0,
+      WRITE = 1
+    } mem_port_t;
+
+    logic io_fence_hold [2];
+
+    always_ff @(posedge clk) begin
+      if (unit_issue[UNIT_IDS.LS].new_request && ls_inputs.fence && 
+           (fence_details.succ.is_i | fence_details.succ.is_o)) begin
+        io_fence_hold[READ]  <= fence_details.succ.is_i;
+        io_fence_hold[WRITE] <= fence_details.succ.is_o;
       end
 
-      if (cfu.req_insn[6:2] inside {VSTORE_T} && cfu.req_valid) begin
-        vstore_hold <= 1'b1;
-        vstore_id   <= cfu.req_id[LOG2_MAX_IDS-1:0];
+      if (load_store_status.idle & ~l2.wr_in_flight) begin
+        io_fence_hold[READ] <= 1'b0;
+        if (load_store_status.idle & ~l2.rd_in_flight) begin
+          io_fence_hold[WRITE] <= 1'b0;
+        end
       end
 
       if (rst) begin
-        vstore_hold <= 1'b0;
-        vstore_id <= 'b0;
+        io_fence_hold[READ] <= 1'b0;
+        io_fence_hold[WRITE] <= 1'b0;
       end
     end
 
     ////////////////////////////////////////////////////
     //Writeback
     //First writeback port: ALU
-    //Second writeback port: LS, CSR, [MUL], [DIV], CFU
+    //Second writeback port: LS, CSR, [MUL], [DIV], CXU
     localparam int unsigned NUM_UNITS_PER_PORT [CONFIG.NUM_WB_GROUPS] = '{NUM_WB_UNITS_GROUP_1, NUM_WB_UNITS_GROUP_2};
     writeback #(
         .CONFIG (CONFIG),

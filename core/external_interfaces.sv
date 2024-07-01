@@ -23,7 +23,7 @@
 interface axi_interface #(
       parameter int unsigned ADDR_WIDTH = 32,
       parameter int unsigned DATA_WIDTH = 32,
-      parameter int unsigned ID_WIDTH   = 6
+      parameter int unsigned ID_WIDTH   = 1+8+8
     );
     /* import cva5_config::*; */
 
@@ -97,7 +97,7 @@ endinterface
 interface axi64_interface #(
       parameter int unsigned ADDR_WIDTH = 32,
       parameter int unsigned DATA_WIDTH = 64,
-      parameter int unsigned ID_WIDTH   = 6
+      parameter int unsigned ID_WIDTH   = 1+8+8
     );
     /* import cva5_config::*; */
 

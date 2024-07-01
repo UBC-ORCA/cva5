@@ -153,6 +153,19 @@ package cva5_types;
     } load_store_inputs_t;
 
     typedef struct packed{
+        logic is_i;
+        logic is_o;
+        logic is_r;
+        logic is_w;
+    } iorw_t;
+
+    typedef struct packed{
+        logic [3:0] fm;
+        iorw_t pred;
+        iorw_t succ;
+    } fence_details_t;
+
+    typedef struct packed{
         logic [XLEN-1:0] rs1;
         logic [XLEN-1:0] rs2;
         logic [1:0] op;

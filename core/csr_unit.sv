@@ -73,8 +73,9 @@ module csr_unit
         input interrupt_t s_interrupt,
         input interrupt_t m_interrupt,
         
-        //CFU
-        cfu_interface cfu
+        //CXU
+        output cxu_req_en,
+        cxu_interface.master cxu
         );
 
     logic busy;
@@ -212,8 +213,8 @@ module csr_unit
 
     logic[XLEN-1:0] mscratch;
 
-    mcfu_selector_t mcfu_selector;
-    mcfu_selector_table_t mcfu_selector_table; /* Optional */
+    mcx_selector_t mcx_selector;
+    mcx_table_t mcx_table; /* Optional */
 
     //Virtualization support: TSR, TW, TVM unused
     //Extension context status: SD, FS, XS unused
@@ -524,17 +525,17 @@ generate if (CONFIG.INCLUDE_M_MODE) begin : gen_csr_m_mode
     end
 
     ////////////////////////////////////////////////////
-    //MCFU_SELECTOR
+    //mcx_selector
     //TODO : masks
-    assign cfu.req_en = mcfu_selector.en;
-    assign cfu.req_cfu = mcfu_selector.cfu_id;
-    assign cfu.req_state = mcfu_selector.state_id;
+    assign cxu_req_en = mcx_selector.en;
+    assign cxu.req_cxu = mcx_selector.cxu_id;
+    assign cxu.req_state = mcx_selector.state_id;
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            mcfu_selector <= 0; 
-        end else if (mwrite_en(MCFU_SELECTOR))
-            mcfu_selector <= updated_csr;
+            mcx_selector <= 0; 
+        end else if (mwrite_en(MCX_SELECTOR))
+            mcx_selector <= updated_csr;
     end
 
 end
@@ -629,17 +630,17 @@ endgenerate
     ////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////////
-    //CFU_STATUS
-    cfu_status_t cfu_status;
-    cfu_selector_index_t cfu_selector_index; /* Optional */
+    //cx_status
+    cx_status_t cx_status;
+    cx_index_t cx_index; /* Optional */
 
     always_ff @(posedge clk) begin
         if (rst)
-            cfu_status <= 0;
-        else if (commit && (csr_inputs_r.op == CSR_RW) && (csr_inputs_r.addr == CFU_STATUS))
-            cfu_status <= csr_inputs_r.data;
-        else if (cfu.resp_valid) // FIXME : cfu_status might be updated before the register file
-            cfu_status <= 32'(cfu.resp_status);
+            cx_status <= 0;
+        else if (commit && (csr_inputs_r.op == CSR_RW) && (csr_inputs_r.addr == CX_STATUS))
+            cx_status <= csr_inputs_r.data;
+        else if (cxu.resp_valid) // FIXME : cx_status might be updated before the register file
+            cx_status <= 32'(cxu.resp_status);
     end
     ////////////////////////////////////////////////////
     //Timers and Counters
@@ -723,8 +724,8 @@ endgenerate
             [12'hB83 : 12'hB9F] : selected_csr = 0;
             //Machine Counter Setup
             [12'h320 : 12'h33F] : selected_csr = 0;
-            //Machine CFU regs
-            MCFU_SELECTOR : selected_csr = CONFIG.INCLUDE_M_MODE ? mcfu_selector : 0;
+            //Machine CX regs
+            MCX_SELECTOR : selected_csr = CONFIG.INCLUDE_M_MODE ? mcx_selector : 0;
 
             //Supervisor Trap Setup
             SSTATUS : selected_csr = CONFIG.INCLUDE_S_MODE ? (mstatus & sstatus_mask) : '0;
@@ -756,8 +757,8 @@ endgenerate
             TIMEH : selected_csr = 32'(mcycle[CONFIG.CSRS.NON_STANDARD_OPTIONS.COUNTER_W-1:XLEN]);
             INSTRETH : selected_csr = 32'(minst_ret[CONFIG.CSRS.NON_STANDARD_OPTIONS.COUNTER_W-1:XLEN]);
             [12'hC83 : 12'hC9F] : selected_csr = 0;
-            //User CFU regs
-            CFU_STATUS : selected_csr = cfu_status;
+            //User CX regs
+            CX_STATUS : selected_csr = cx_status;
 
             default : selected_csr = 0;
         endcase

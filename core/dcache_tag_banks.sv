@@ -80,8 +80,8 @@ module dcache_tag_banks
 
     assign external_inv = extern_inv & CONFIG.DCACHE.USE_EXTERNAL_INVALIDATIONS;
 
-    assign porta_addr = miss_req ? addr_utils.getTagLineAddr(miss_addr) : external_inv ? addr_utils.getTagLineAddr(inv_addr) : addr_utils.getTagLineAddr(store_addr);
-    assign portb_addr = addr_utils.getTagLineAddr(load_addr);
+    assign porta_addr = miss_req ? addr_utils.getTagLineAddr(miss_addr) : addr_utils.getTagLineAddr(inv_addr);
+    assign portb_addr = load_req ? addr_utils.getTagLineAddr(load_addr) : addr_utils.getTagLineAddr(store_addr);
 
     assign extern_inv_complete = external_inv & ~miss_req;
 
@@ -93,18 +93,18 @@ module dcache_tag_banks
         tag_bank #($bits(dtag_entry_t), CONFIG.DCACHE.LINES) dtag_bank ( 
             .clk (clk),
             .rst (rst),
-            .en_a (store_req | (miss_req & miss_way[i]) | external_inv),
+            .en_a ((miss_req & miss_way[i]) | external_inv),
             .wen_a ((miss_req & miss_way[i]) | external_inv),
             .addr_a (porta_addr),
             .data_in_a (new_tagline),
             .data_out_a (tag_line_a[i]),
-            .en_b (load_req),
+            .en_b (store_req | load_req),
             .wen_b ('0),
             .addr_b (portb_addr),
             .data_in_b ('0),
             .data_out_b(tag_line_b[i])
         );
-        assign store_tag_hit_way[i] = ({store_req_r, 1'b1, addr_utils.getTag(store_addr_r)} == {1'b1, tag_line_a[i]});
+        assign store_tag_hit_way[i] = ({store_req_r, 1'b1, addr_utils.getTag(store_addr_r)} == {1'b1, tag_line_b[i]});
         assign load_tag_hit_way[i] = ({load_req_r, 1'b1, addr_utils.getTag(miss_addr)} == {1'b1, tag_line_b[i]});
     end endgenerate
 
