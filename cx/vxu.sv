@@ -1,4 +1,4 @@
-module vfu
+module vxu
     import cva5_config::*;
     import riscv_types::*;
     import cva5_types::*;

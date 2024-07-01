@@ -4,7 +4,7 @@ import cva5_config::*;
 import riscv_types::*;
 import cva5_types::*;
 import cxu_types::*;
-import dma_types::*;
+import cx_dma_types::*;
 
 (
   input  logic clk,

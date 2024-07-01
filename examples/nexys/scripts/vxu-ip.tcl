@@ -2,7 +2,7 @@
 set origin_dir [file dirname [info script]]
 
 # Set the project name
-set _xil_proj_name_ "vfu_wrapper"
+set _xil_proj_name_ "vxu_wrapper"
 
 set sources_dir $origin_dir/../../../
 
@@ -25,15 +25,19 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 }
 
 #import sources needed for blackbox packaging
+import_files -norecurse $sources_dir/rvv-lite/src/multiported-ram/config.vh
+import_files -norecurse $sources_dir/rvv-lite/src/multiported-ram/utils.vh
 import_files -norecurse $sources_dir/core/cva5_config.sv
 import_files -norecurse $sources_dir/core/riscv_types.sv
 import_files -norecurse $sources_dir/core/csr_types.sv
 import_files -norecurse $sources_dir/core/cva5_types.sv
 import_files -norecurse $sources_dir/l2_arbiter/l2_config_and_types.sv
-import_files -norecurse $sources_dir/cfu/cfu_types.sv
-import_files -norecurse $sources_dir/cfu/cfu_interface.sv
+import_files -norecurse $sources_dir/cx/cxu_types.sv
+import_files -norecurse $sources_dir/cx/cxu_interface.sv
 import_files -norecurse $sources_dir/core/external_interfaces.sv
-import_files -norecurse $sources_dir/examples/nexys/vfu_wrapper.sv
+import_files -norecurse $sources_dir/cx/cx_dma_types.sv
+import_files -norecurse $sources_dir/cx/cx_dma_interfaces.sv
+import_files -norecurse $sources_dir/examples/nexys/vxu_wrapper.sv
 
 # Set IP repository paths
 set obj [get_filesets sources_1]
@@ -44,9 +48,9 @@ update_ip_catalog -rebuild
 
 # Set 'sources_1' fileset properties
 set obj [get_filesets sources_1]
-set_property -name "top" -value "vfu_wrapper" -objects $obj
+set_property -name "top" -value "vxu_wrapper" -objects $obj
 set_property -name "top_auto_set" -value "0" -objects $obj
-set_property -name "top_file" -value " ${sources_dir}/examples/nexys/vfu_wrapper.sv" -objects $obj
+set_property -name "top_file" -value " ${sources_dir}/examples/nexys/vxu_wrapper.sv" -objects $obj
 
 
 ############## Initial IP Packaging 
@@ -59,9 +63,9 @@ ipx::save_core [ipx::current_core]
 # To set the axi interface as aximm and port map all the signals over #
 
 ##### Naming
-set_property name VFU [ipx::current_core]
-set_property display_name VFU_NEXYS7 [ipx::current_core]
-set_property description VFU_NEXYS7 [ipx::current_core]
+set_property name VXU [ipx::current_core]
+set_property display_name VXU_NEXYS7 [ipx::current_core]
+set_property description VXU_NEXYS7 [ipx::current_core]
 set_property vendor {} [ipx::current_core]
 set_property vendor user [ipx::current_core]
 
@@ -75,14 +79,25 @@ import_files -force -fileset [get_filesets sources_1] $sources_dir/core/riscv_ty
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/csr_types.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/cva5_types.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/l2_arbiter/l2_config_and_types.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/cfu/cfu_types.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cx/cxu_types.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cx/cx_dma_types.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/internal_interfaces.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/external_interfaces.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/cfu/cfu_interface.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cx/cxu_interface.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cx/cx_dma_interfaces.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/lfsr.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/lutrams/lutram_1w_1r.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/cva5_fifo.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/core/set_clr_reg_with_rst.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/config.vh
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/utils.vh
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mpram_gen.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mpram_gen_be.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/dpram.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/dpram_be.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mrram.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mrram_be.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mpram_xor.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mpram.v
 import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/opcodes.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/vALU/avg_unit.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/vALU/fxp_round.sv
@@ -106,12 +121,21 @@ import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/
 import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/vALU/vWiden.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/vALU/vALU.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/addr_gen_unit.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/cfg_unit.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/insn_decoder.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/vec_regfile.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/extract_mask.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/generate_be.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/read_burst_aligner.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/write_burst_aligner.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/vcfg.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/rvv_proc_main.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/cfu/vfu.sv
-import_files -force -fileset [get_filesets sources_1] $sources_dir/examples/nexys/vfu_wrapper.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/verilog-axi/rtl/priority_encoder.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/verilog-axi/rtl/arbiter.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/verilog-axis/rtl/axis_arb_mux.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/verilog-axis/rtl/axis_demux.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cx/cx_tracker.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cx/cx_dma_unit.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cx/cx_switch_unit.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/cx/vxu.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/examples/nexys/vxu_wrapper.sv
 
 ############## Re-packaging of core
 ipx::merge_project_changes files [ipx::current_core]
