@@ -41,7 +41,7 @@ set script_folder [_tcl::get_script_folder]
 # project, but make sure you do not have an existing project
 # <./myproj/project_1.xpr> in the current working folder.
 
-set _xil_proj_name_ "system_nexys"
+set _xil_proj_name_ "system"
 
 create_project ${_xil_proj_name_} $script_folder/${_xil_proj_name_} -part xc7a100tcsg324-1
 set_property BOARD_PART digilentinc.com:nexys-a7-100t:part0:1.2 [current_project]
@@ -52,7 +52,7 @@ set design_name system
 
 add_files -fileset constrs_1 -norecurse $script_folder/manual_pin_assignments.xdc
 
-set_property ip_repo_paths [list $script_folder/cva5_nexys_wrapper $script_folder/vfu_wrapper] [current_project]
+set_property ip_repo_paths [list $script_folder/cva5_wrapper $script_folder/vxu_wrapper] [current_project]
 update_ip_catalog
 
 # If you do not already have an existing IP Integrator design open,
@@ -128,7 +128,7 @@ set bCheckIPs 1
 if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
 user:user:CVA5:1.0\
-user:user:VFU:1.0\
+user:user:VXU:1.0\
 xilinx.com:ip:system_ila:1.1\
 xilinx.com:ip:axi_gpio:2.0\
 xilinx.com:ip:axi_uart16550:2.0\
@@ -195,7 +195,7 @@ proc write_mig_file_system_mig_7series_0_0 { str_mig_prj_filepath } {
    puts $mig_prj_file {    <MemoryDevice>DDR2_SDRAM/Components/MT47H64M16HR-25E</MemoryDevice>}
    puts $mig_prj_file {    <TimePeriod>5000</TimePeriod>}
    puts $mig_prj_file {    <VccAuxIO>1.8V</VccAuxIO>}
-   puts $mig_prj_file {    <PHYRatio>2:1</PHYRatio>}
+   puts $mig_prj_file {    <PHYRatio>4:1</PHYRatio>}
    puts $mig_prj_file {    <InputClkFreq>100</InputClkFreq>}
    puts $mig_prj_file {    <UIExtraClocks>1</UIExtraClocks>}
    puts $mig_prj_file {    <MMCM_VCO>1200</MMCM_VCO>}
@@ -369,8 +369,8 @@ proc create_root_design { parentCell } {
   # Create instance: CVA5_0, and set properties
   set CVA5_0 [ create_bd_cell -type ip -vlnv user:user:CVA5:1.0 CVA5_0 ]
 
-  # Create instance: VFU_0, and set properties
-  set VFU_0 [ create_bd_cell -type ip -vlnv user:user:VFU:1.0 VFU_0 ]
+  # Create instance: VXU_0, and set properties
+  set VXU_0 [ create_bd_cell -type ip -vlnv user:user:VXU:1.0 VXU_0 ]
   #
   # Create instance: system_ila_0, and set properties
   set system_ila_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:system_ila:1.1 system_ila_0 ]
@@ -388,8 +388,11 @@ proc create_root_design { parentCell } {
   CONFIG.C_SLOT_1_APC_EN {1} \
   CONFIG.C_SLOT_1_AXI_ADDR_WIDTH {32} \
   CONFIG.C_SLOT_1_AXI_DATA_WIDTH {64} \
-  CONFIG.C_SLOT_1_AXI_ID_WIDTH {6} \
+  CONFIG.C_SLOT_1_AXI_ID_WIDTH {16} \
   CONFIG.C_SLOT_2_APC_EN {1} \
+  CONFIG.C_SLOT_1_AXI_ADDR_WIDTH {32} \
+  CONFIG.C_SLOT_1_AXI_DATA_WIDTH {32} \
+  CONFIG.C_SLOT_1_AXI_ID_WIDTH {16} \
 ] [get_bd_cells system_ila_0]
 
   # Create instance: axi_gpio_0, and set properties
@@ -475,7 +478,7 @@ proc create_root_design { parentCell } {
 
   # Create interface connections
   connect_bd_intf_net -intf_net CVA5_0_m_axi [get_bd_intf_pins CVA5_0/m_axi] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
-  connect_bd_intf_net -intf_net VFU_0_m_axi [get_bd_intf_pins VFU_0/m_axi] [get_bd_intf_pins axi_interconnect_0/S02_AXI]
+  connect_bd_intf_net -intf_net VXU_0_m_axi [get_bd_intf_pins VXU_0/m_axi] [get_bd_intf_pins axi_interconnect_0/S02_AXI]
   connect_bd_intf_net -intf_net axi_gpio_0_GPIO [get_bd_intf_ports dip_switches_16bits] [get_bd_intf_pins axi_gpio_0/GPIO]
   connect_bd_intf_net -intf_net axi_gpio_1_GPIO [get_bd_intf_ports rgb_led] [get_bd_intf_pins axi_gpio_1/GPIO]
   connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_pins axi_interconnect_0/M00_AXI] [get_bd_intf_pins mig_7series_0/S_AXI]
@@ -491,37 +494,36 @@ proc create_root_design { parentCell } {
   connect_bd_net -net clk_wiz_0_clk_out1 [get_bd_pins clk_wiz_0/clk_out1] [get_bd_pins mig_7series_0/sys_clk_i]
   connect_bd_net -net mdm_1_Debug_SYS_Rst [get_bd_pins mdm_1/Debug_SYS_Rst] [get_bd_pins proc_sys_reset_0/mb_debug_sys_rst]
   connect_bd_net -net mig_7series_0_ui_addn_clk_0 [get_bd_pins mig_7series_0/clk_ref_i] [get_bd_pins mig_7series_0/ui_addn_clk_0]
-  connect_bd_net -net mig_7series_0_ui_clk [get_bd_pins CVA5_0/clk] [get_bd_pins VFU_0/clk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_gpio_1/s_axi_aclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK] [get_bd_pins axi_interconnect_0/M03_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins axi_interconnect_0/S02_ACLK] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins mdm_1/M_AXI_ACLK] [get_bd_pins mig_7series_0/ui_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk]
+  connect_bd_net -net mig_7series_0_ui_clk [get_bd_pins CVA5_0/clk] [get_bd_pins VXU_0/clk] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins axi_gpio_1/s_axi_aclk] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK] [get_bd_pins axi_interconnect_0/M03_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_interconnect_0/S01_ACLK] [get_bd_pins axi_interconnect_0/S02_ACLK] [get_bd_pins axi_uart16550_0/s_axi_aclk] [get_bd_pins mdm_1/M_AXI_ACLK] [get_bd_pins mig_7series_0/ui_clk] [get_bd_pins proc_sys_reset_0/slowest_sync_clk]
   connect_bd_net -net mig_7series_0_ui_clk_sync_rst [get_bd_pins mig_7series_0/ui_clk_sync_rst] [get_bd_pins proc_sys_reset_0/ext_reset_in]
   connect_bd_net -net proc_sys_reset_0_interconnect_aresetn [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins proc_sys_reset_0/interconnect_aresetn]
   connect_bd_net -net reset_1 [get_bd_ports reset] [get_bd_pins clk_wiz_0/resetn] [get_bd_pins mig_7series_0/sys_rst]
   connect_bd_net -net rst_clk_wiz_1_100M_peripheral_aresetn [get_bd_pins axi_gpio_0/s_axi_aresetn] [get_bd_pins axi_gpio_1/s_axi_aresetn] [get_bd_pins axi_interconnect_0/M00_ARESETN] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/M02_ARESETN] [get_bd_pins axi_interconnect_0/M03_ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_interconnect_0/S01_ARESETN] [get_bd_pins axi_interconnect_0/S02_ARESETN] [get_bd_pins axi_uart16550_0/s_axi_aresetn] [get_bd_pins mdm_1/M_AXI_ARESETN] [get_bd_pins mig_7series_0/aresetn] [get_bd_pins proc_sys_reset_0/peripheral_aresetn]
   connect_bd_net -net sys_clock_1 [get_bd_ports sys_clock] [get_bd_pins clk_wiz_0/clk_in1]
-  connect_bd_net -net xlslice_0_Dout [get_bd_pins CVA5_0/rst] [get_bd_pins VFU_0/rst] [get_bd_pins xlslice_0/Dout]
+  connect_bd_net -net xlslice_0_Dout [get_bd_pins CVA5_0/rst] [get_bd_pins VXU_0/rst] [get_bd_pins xlslice_0/Dout]
 
-  connect_bd_net -net cfu_req_en_0 [get_bd_pins CVA5_0/cfu_req_en] [get_bd_pins VFU_0/cfu_req_en]
-  connect_bd_net -net cfu_req_cfu_csr_0 [get_bd_pins CVA5_0/cfu_req_cfu_csr] [get_bd_pins VFU_0/cfu_req_cfu_csr]
-  connect_bd_net -net cfu_req_valid_0 [get_bd_pins CVA5_0/cfu_req_valid] [get_bd_pins VFU_0/cfu_req_valid]
-  connect_bd_net -net cfu_req_ready_0 [get_bd_pins CVA5_0/cfu_req_ready] [get_bd_pins VFU_0/cfu_req_ready]
-  connect_bd_net -net cfu_req_id_0 [get_bd_pins CVA5_0/cfu_req_id] [get_bd_pins VFU_0/cfu_req_id]
-  connect_bd_net -net cfu_req_cfu_0 [get_bd_pins CVA5_0/cfu_req_cfu] [get_bd_pins VFU_0/cfu_req_cfu]
-  connect_bd_net -net cfu_req_state_0 [get_bd_pins CVA5_0/cfu_req_state] [get_bd_pins VFU_0/cfu_req_state]
-  connect_bd_net -net cfu_req_func_0 [get_bd_pins CVA5_0/cfu_req_func] [get_bd_pins VFU_0/cfu_req_func]
-  connect_bd_net -net cfu_req_insn_0 [get_bd_pins CVA5_0/cfu_req_insn] [get_bd_pins VFU_0/cfu_req_insn]
-  connect_bd_net -net cfu_req_data0_0 [get_bd_pins CVA5_0/cfu_req_data0] [get_bd_pins VFU_0/cfu_req_data0]
-  connect_bd_net -net cfu_req_data1_0 [get_bd_pins CVA5_0/cfu_req_data1] [get_bd_pins VFU_0/cfu_req_data1]
-  connect_bd_net -net cfu_resp_valid_0 [get_bd_pins CVA5_0/cfu_resp_valid] [get_bd_pins VFU_0/cfu_resp_valid]
-  connect_bd_net -net cfu_resp_ready_0 [get_bd_pins CVA5_0/cfu_resp_ready] [get_bd_pins VFU_0/cfu_resp_ready]
-  connect_bd_net -net cfu_resp_id_0 [get_bd_pins CVA5_0/cfu_resp_id] [get_bd_pins VFU_0/cfu_resp_id]
-  connect_bd_net -net cfu_resp_status_0 [get_bd_pins CVA5_0/cfu_resp_status] [get_bd_pins VFU_0/cfu_resp_status]
-  connect_bd_net -net cfu_resp_data_0 [get_bd_pins CVA5_0/cfu_resp_data] [get_bd_pins VFU_0/cfu_resp_data]
+  #connect_bd_net -net cxu_req_en_0 [get_bd_pins CVA5_0/cxu_req_en] [get_bd_pins VXU_0/cxu_req_en]
+  connect_bd_net -net cxu_req_valid_0 [get_bd_pins CVA5_0/cxu_req_valid] [get_bd_pins VXU_0/cxu_req_valid]
+  connect_bd_net -net cxu_req_ready_0 [get_bd_pins CVA5_0/cxu_req_ready] [get_bd_pins VXU_0/cxu_req_ready]
+  connect_bd_net -net cxu_req_id_0 [get_bd_pins CVA5_0/cxu_req_id] [get_bd_pins VXU_0/cxu_req_id]
+  connect_bd_net -net cxu_req_cxu_0 [get_bd_pins CVA5_0/cxu_req_cxu] [get_bd_pins VXU_0/cxu_req_cxu]
+  connect_bd_net -net cxu_req_state_0 [get_bd_pins CVA5_0/cxu_req_state] [get_bd_pins VXU_0/cxu_req_state]
+  connect_bd_net -net cxu_req_func_0 [get_bd_pins CVA5_0/cxu_req_func] [get_bd_pins VXU_0/cxu_req_func]
+  connect_bd_net -net cxu_req_insn_0 [get_bd_pins CVA5_0/cxu_req_insn] [get_bd_pins VXU_0/cxu_req_insn]
+  connect_bd_net -net cxu_req_data0_0 [get_bd_pins CVA5_0/cxu_req_data0] [get_bd_pins VXU_0/cxu_req_data0]
+  connect_bd_net -net cxu_req_data1_0 [get_bd_pins CVA5_0/cxu_req_data1] [get_bd_pins VXU_0/cxu_req_data1]
+  connect_bd_net -net cxu_resp_valid_0 [get_bd_pins CVA5_0/cxu_resp_valid] [get_bd_pins VXU_0/cxu_resp_valid]
+  connect_bd_net -net cxu_resp_ready_0 [get_bd_pins CVA5_0/cxu_resp_ready] [get_bd_pins VXU_0/cxu_resp_ready]
+  connect_bd_net -net cxu_resp_id_0 [get_bd_pins CVA5_0/cxu_resp_id] [get_bd_pins VXU_0/cxu_resp_id]
+  connect_bd_net -net cxu_resp_status_0 [get_bd_pins CVA5_0/cxu_resp_status] [get_bd_pins VXU_0/cxu_resp_status]
+  connect_bd_net -net cxu_resp_data_0 [get_bd_pins CVA5_0/cxu_resp_data] [get_bd_pins VXU_0/cxu_resp_data]
 
-  connect_bd_net [get_bd_pins CVA5_0/inv_ack] [get_bd_pins VFU_0/inv_ack]
-  connect_bd_net [get_bd_pins CVA5_0/inv_valid] [get_bd_pins VFU_0/inv_valid]
-  connect_bd_net [get_bd_pins CVA5_0/inv_addr] [get_bd_pins VFU_0/inv_addr]
+  connect_bd_net [get_bd_pins CVA5_0/inv_ack] [get_bd_pins VXU_0/inv_ack]
+  connect_bd_net [get_bd_pins CVA5_0/inv_valid] [get_bd_pins VXU_0/inv_valid]
+  connect_bd_net [get_bd_pins CVA5_0/inv_addr] [get_bd_pins VXU_0/inv_addr]
 
   connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_0_AXI] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
-  connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_1_AXI] [get_bd_intf_pins VFU_0/m_axi]
+  connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_1_AXI] [get_bd_intf_pins VXU_0/m_axi]
   connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_2_AXI] [get_bd_intf_pins mig_7series_0/S_AXI]
   connect_bd_net [get_bd_pins system_ila_0/clk] [get_bd_pins mig_7series_0/ui_clk]
   connect_bd_net [get_bd_pins system_ila_0/resetn] [get_bd_pins xlslice_0/Dout]
@@ -531,10 +533,10 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x88200000 -range 0x00010000 -target_address_space [get_bd_addr_spaces CVA5_0/m_axi] [get_bd_addr_segs axi_gpio_1/S_AXI/Reg] -force
   assign_bd_address -offset 0x88000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces CVA5_0/m_axi] [get_bd_addr_segs axi_uart16550_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x80000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces CVA5_0/m_axi] [get_bd_addr_segs mig_7series_0/memmap/memaddr] -force
-  assign_bd_address -offset 0x88100000 -range 0x00010000 -target_address_space [get_bd_addr_spaces VFU_0/m_axi] [get_bd_addr_segs axi_gpio_0/S_AXI/Reg] -force
-  assign_bd_address -offset 0x88200000 -range 0x00010000 -target_address_space [get_bd_addr_spaces VFU_0/m_axi] [get_bd_addr_segs axi_gpio_1/S_AXI/Reg] -force
-  assign_bd_address -offset 0x88000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces VFU_0/m_axi] [get_bd_addr_segs axi_uart16550_0/S_AXI/Reg] -force
-  assign_bd_address -offset 0x80000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces VFU_0/m_axi] [get_bd_addr_segs mig_7series_0/memmap/memaddr] -force
+  assign_bd_address -offset 0x88100000 -range 0x00010000 -target_address_space [get_bd_addr_spaces VXU_0/m_axi] [get_bd_addr_segs axi_gpio_0/S_AXI/Reg] -force
+  assign_bd_address -offset 0x88200000 -range 0x00010000 -target_address_space [get_bd_addr_spaces VXU_0/m_axi] [get_bd_addr_segs axi_gpio_1/S_AXI/Reg] -force
+  assign_bd_address -offset 0x88000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces VXU_0/m_axi] [get_bd_addr_segs axi_uart16550_0/S_AXI/Reg] -force
+  assign_bd_address -offset 0x80000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces VXU_0/m_axi] [get_bd_addr_segs mig_7series_0/memmap/memaddr] -force
   assign_bd_address -offset 0x88100000 -range 0x00010000 -target_address_space [get_bd_addr_spaces mdm_1/Data] [get_bd_addr_segs axi_gpio_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x88200000 -range 0x00010000 -target_address_space [get_bd_addr_spaces mdm_1/Data] [get_bd_addr_segs axi_gpio_1/S_AXI/Reg] -force
   assign_bd_address -offset 0x88000000 -range 0x00010000 -target_address_space [get_bd_addr_spaces mdm_1/Data] [get_bd_addr_segs axi_uart16550_0/S_AXI/Reg] -force
