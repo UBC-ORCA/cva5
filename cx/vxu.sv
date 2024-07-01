@@ -6,8 +6,8 @@ module vfu
     import cx_dma_types::*;
     import opcodes::*;
     #(
-        parameter STATE_ID_WIDTH      = C_M_CXU_STATE_ID_W,
-        parameter QUEUE_DEPTH         = 8*MAX_IDS,
+        parameter STATE_ID_WIDTH      = 1,
+        parameter QUEUE_DEPTH         = 8,
         parameter MAX_READ_IN_FLIGHT  = 1,
         parameter MAX_WRITE_IN_FLIGHT = 1
     )

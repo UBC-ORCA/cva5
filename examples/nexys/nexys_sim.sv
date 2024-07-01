@@ -254,9 +254,18 @@ module cva5_sim
     l1_to_axi  arb(.*, .cpu(l2), .axi(axi));
     cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*);
 
+    localparam STATE_ID_WIDTH      = C_M_CXU_STATE_ID_W;
+    localparam QUEUE_DEPTH         = 8*MAX_IDS;
+    localparam MAX_READ_IN_FLIGHT  = 1;
+    localparam MAX_WRITE_IN_FLIGHT = 1;
+
     for (k = 0; k < NUM_CXUS; ++k) begin
-      vfu 
-      vfu_block (
+      vxu (
+        .STATE_ID_WIDTH(STATE_ID_WIDTH),
+        .QUEUE_DEPTH(QUEUE_DEPTH),
+        .MAX_READ_IN_FLIGHT(MAX_READ_IN_FLIGHT),
+        .MAX_WRITE_IN_FLIGHT(MAX_READ_IN_FLIGHT))
+      vxu_block (
         .i_clk(clk),
         .i_rst(rst),
         .s_cxu(cxus[k]),

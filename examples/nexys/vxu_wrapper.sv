@@ -140,8 +140,17 @@ import dma_types::*;
 
   cxu_interface cxu ();
 
+  localparam STATE_ID_WIDTH      = C_M_CXU_STATE_ID_W;
+  localparam QUEUE_DEPTH         = 8*MAX_IDS;
+  localparam MAX_READ_IN_FLIGHT  = 1;
+  localparam MAX_WRITE_IN_FLIGHT = 1;
+
   for (i = 0; i < NUM_CXUS; ++i) begin
-    vxu 
+    vxu #(
+      .STATE_ID_WIDTH(STATE_ID_WIDTH),
+      .QUEUE_DEPTH(QUEUE_DEPTH),
+      .MAX_READ_IN_FLIGHT(MAX_READ_IN_FLIGHT),
+      .MAX_WRITE_IN_FLIGHT(MAX_READ_IN_FLIGHT))
     vxu_block (
       .i_clk(clk),
       .i_rst(rst),
