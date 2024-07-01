@@ -27,7 +27,7 @@ module nexys_wrapper
   import cva5_config::*;
   import cva5_types::*;
   import l2_config_and_types::*;
-  import cfu_types::*;
+  import cxu_types::*;
 
   (
     input logic clk,
@@ -80,23 +80,22 @@ module nexys_wrapper
     input  logic inv_valid,
     input  logic [32-1:0] inv_addr,
 
-    //cfu interface signals
-    output logic                          cfu_req_en,
-    output logic                          cfu_req_valid,
-    input  logic                          cfu_req_ready,
-    output logic                          cfu_req_cfu_csr,
-    output logic [C_M_CFU_REQ_ID_W-1:0]   cfu_req_id,
-    output logic [C_M_CFU_CFU_ID_W-1:0]   cfu_req_cfu,
-    output logic [C_M_CFU_STATE_ID_W-1:0] cfu_req_state,
-    output logic [C_M_CFU_FUNC_ID_W-1:0]  cfu_req_func,
-    output logic [C_M_CFU_INSN_W-1:0]     cfu_req_insn,
-    output logic [C_M_CFU_DATA_W-1:0]     cfu_req_data0,
-    output logic [C_M_CFU_DATA_W-1:0]     cfu_req_data1,
-    input  logic                          cfu_resp_valid,
-    output logic                          cfu_resp_ready,
-    input  logic [C_M_CFU_REQ_ID_W-1:0]   cfu_resp_id,
-    input  logic [C_M_CFU_STATUS_W-1:0]   cfu_resp_status,
-    input  logic [C_M_CFU_DATA_W-1:0]     cfu_resp_data
+    //cxu interface signals
+    //output logic                          cxu_req_en,
+    output logic                          cxu_req_valid,
+    input  logic                          cxu_req_ready,
+    output logic [C_M_cxu_req_ID_W-1:0]   cxu_req_id,
+    output logic [C_M_CXU_CXU_ID_W-1:0]   cxu_req_cxu,
+    output logic [C_M_CXU_STATE_ID_W-1:0] cxu_req_state,
+    output logic [C_M_CXU_FUNC_ID_W-1:0]  cxu_req_func,
+    output logic [C_M_CXU_INSN_W-1:0]     cxu_req_insn,
+    output logic [C_M_CXU_DATA_W-1:0]     cxu_req_data0,
+    output logic [C_M_CXU_DATA_W-1:0]     cxu_req_data1,
+    input  logic                          cxu_resp_valid,
+    output logic                          cxu_resp_ready,
+    input  logic [C_M_cxu_req_ID_W-1:0]   cxu_resp_id,
+    input  logic [C_M_CXU_STATUS_W-1:0]   cxu_resp_status,
+    input  logic [C_M_CXU_DATA_W-1:0]     cxu_resp_data
 
   );
 
@@ -134,7 +133,7 @@ module nexys_wrapper
             H : 32'h87FFFFFF
         },
         ICACHE : '{
-            LINES : 512,
+            LINES : 256,
             LINE_W : 4,
             WAYS : 2,
             USE_EXTERNAL_INVALIDATIONS : 0,
@@ -154,9 +153,9 @@ module nexys_wrapper
             H : 32'h8FFFFFFF
         },
         DCACHE : '{
-            LINES : 1024,
+            LINES : 512,
             LINE_W : 4,
-            WAYS : 1,
+            WAYS : 2,
             USE_EXTERNAL_INVALIDATIONS : 1,
             USE_NON_CACHEABLE : 1,
             NON_CACHEABLE : '{
@@ -213,27 +212,26 @@ module nexys_wrapper
     //L2 and AXI
     l2_requester_interface l2 ();
     axi_interface axi ();
-    cfu_interface cfu();
+    cxu_interface cxu();
 
     logic rst_r1, rst_r2;
 
-    //unpacking cfu interfaces
-    assign cfu_req_en = cfu.req_en;
-    assign cfu_req_valid = cfu.req_valid;
-    assign cfu.req_ready = cfu_req_ready; 
-    assign cfu_req_cfu_csr = cfu.req_cfu_csr;
-    assign cfu_req_id = cfu.req_id;
-    assign cfu_req_cfu = cfu.req_cfu;
-    assign cfu_req_state = cfu.req_state;
-    assign cfu_req_func = cfu.req_func;
-    assign cfu_req_insn = cfu.req_insn;
-    assign cfu_req_data0 = cfu.req_data0;
-    assign cfu_req_data1 = cfu.req_data1;
-    assign cfu.resp_valid = cfu_resp_valid;
-    assign cfu_resp_ready = cfu.resp_ready;
-    assign cfu.resp_id = cfu_resp_id;
-    assign cfu.resp_status = cfu_resp_status;
-    assign cfu.resp_data = cfu_resp_data;
+    //unpacking cxu interfaces
+    //assign cxu_req_en = cxu.req_en;
+    assign cxu_req_valid = cxu.req_valid;
+    assign cxu.req_ready = cxu_req_ready; 
+    assign cxu_req_id = cxu.req_id;
+    assign cxu_req_cxu = cxu.req_cxu;
+    assign cxu_req_state = cxu.req_state;
+    assign cxu_req_func = cxu.req_func;
+    assign cxu_req_insn = cxu.req_insn;
+    assign cxu_req_data0 = cxu.req_data0;
+    assign cxu_req_data1 = cxu.req_data1;
+    assign cxu.resp_valid = cxu_resp_valid;
+    assign cxu_resp_ready = cxu.resp_ready;
+    assign cxu.resp_id = cxu_resp_id;
+    assign cxu.resp_status = cxu_resp_status;
+    assign cxu.resp_data = cxu_resp_data;
 
     assign axi.arready = m_axi_arready;
     assign m_axi_arvalid = axi.arvalid;
