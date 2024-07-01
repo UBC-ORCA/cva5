@@ -260,7 +260,7 @@ module cva5_sim
     localparam MAX_WRITE_IN_FLIGHT = 1;
 
     for (k = 0; k < NUM_CXUS; ++k) begin
-      vxu (
+      vxu #(
         .STATE_ID_WIDTH(STATE_ID_WIDTH),
         .QUEUE_DEPTH(QUEUE_DEPTH),
         .MAX_READ_IN_FLIGHT(MAX_READ_IN_FLIGHT),
