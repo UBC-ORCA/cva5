@@ -42,7 +42,7 @@ package cxu_types;
 
     parameter C_M_CXU_REQ_ID_W      = 10;
     parameter C_M_CXU_CXU_ID_W      = 8;
-    parameter C_M_CXU_STATE_ID_W    = 1;
+    parameter C_M_CXU_STATE_ID_W    = 3;
     parameter C_M_CXU_FUNC_ID_W     = 10;
     parameter C_M_CXU_INSN_W        = 32;
     parameter C_M_CXU_DATA_W        = 32;
