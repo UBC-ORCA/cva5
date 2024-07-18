@@ -509,4 +509,14 @@ module cx_dma_unit
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // TODO: coherence invalidation
   
+  ////////////////////////////////////////////////////
+  //Assertions
+
+  logic [2-1:0] req_completes;
+
+  assign req_completes = {read_complete, write_complete};
+
+  assert property (@(posedge i_clk) disable iff (i_rst) |req_completes |-> $countones(req_completes) == 1) 
+                                            else $error("cx_dma_unit: read and write complete at the same time");
+    
 endmodule
