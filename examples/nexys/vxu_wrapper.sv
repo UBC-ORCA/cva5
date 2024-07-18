@@ -172,7 +172,7 @@ import cx_dma_types::*;
   cxu_interface cxus [NUM_CXUS] ();
 
   cx_switch_unit #(
-    .NUM_SLAVES(2))
+    .NUM_SLAVES(NUM_CXUS))
   cx_switch_unit_block (
     .i_clk(clk),
     .i_rst(rst),
