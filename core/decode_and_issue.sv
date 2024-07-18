@@ -90,10 +90,10 @@ module decode_and_issue
     logic uses_rd;
 
     ///////////////////////////////////////
-    // VFU
+    // vxu
     logic is_vx;
-    logic vfu_uses_rs [REGFILE_READ_PORTS];
-    logic vfu_uses_rd;
+    logic vxu_uses_rs [REGFILE_READ_PORTS];
+    logic vxu_uses_rd;
 
     rs_addr_t rs_addr [REGFILE_READ_PORTS];
     rs_addr_t rd_addr;
@@ -179,25 +179,25 @@ module decode_and_issue
 
     ////////////////////////////////////////////////////
     //Register File Support
-    assign uses_rs[RS1] = opcode_trim inside {JALR_T, BRANCH_T, LOAD_T, STORE_T, ARITH_IMM_T, ARITH_T, AMO_T} | is_csr | is_cx & ~(is_cx_csr & fn3[2])| vfu_uses_rs[RS1];
-    assign uses_rs[RS2] = opcode_trim inside {BRANCH_T, ARITH_T, AMO_T} | (opcode_trim inside {CUSTOM_0_T, CUSTOM_2_T} & is_cx) | vfu_uses_rs[RS2];//Stores are exempted due to store forwarding
-    assign uses_rd = opcode_trim inside {LUI_T, AUIPC_T, JAL_T, JALR_T, LOAD_T, ARITH_IMM_T, ARITH_T} | is_csr | (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T} & is_cx) | vfu_uses_rd | is_cx_csr;
+    assign uses_rs[RS1] = opcode_trim inside {JALR_T, BRANCH_T, LOAD_T, STORE_T, ARITH_IMM_T, ARITH_T, AMO_T} | is_csr | is_cx & ~(is_cx_csr & fn3[2])| vxu_uses_rs[RS1];
+    assign uses_rs[RS2] = opcode_trim inside {BRANCH_T, ARITH_T, AMO_T} | (opcode_trim inside {CUSTOM_0_T, CUSTOM_2_T} & is_cx) | vxu_uses_rs[RS2];//Stores are exempted due to store forwarding
+    assign uses_rd = opcode_trim inside {LUI_T, AUIPC_T, JAL_T, JALR_T, LOAD_T, ARITH_IMM_T, ARITH_T} | is_csr | (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T} & is_cx) | vxu_uses_rd | is_cx_csr;
 
     // rs1  : VMEM [all] - VALU_CFG_T [ OPIVX (all) | OPFVF (all) | OPMVX (all) | OPCFG (vsetvli, vsetvl) ]
-    assign vfu_uses_rs[RS1] = is_vx & (opcode_trim inside {VLOAD_T, VSTORE_T} |
+    assign vxu_uses_rs[RS1] = is_vx & (opcode_trim inside {VLOAD_T, VSTORE_T} |
                                         (opcode_trim inside {VALU_CFG_T} &
                                           ((fn3 inside {OPIVX_fn3, OPFVF_fn3, OPMVX_fn3}) | 
                                              (fn3 inside {OPCFG_fn3} & ((decode.instruction[31] == 1'b0) | 
                                                                         (decode.instruction[31:25] == 7'b1000000))))));
     // rs2  : VMEM [strided] - VALU_CFG_T [ OPCFG (vsetvl) ]
-    assign vfu_uses_rs[RS2] = is_vx & ((opcode_trim inside {VLOAD_T, VSTORE_T} & 
+    assign vxu_uses_rs[RS2] = is_vx & ((opcode_trim inside {VLOAD_T, VSTORE_T} & 
                                             (decode.instruction[27:26] == V_LS_SE_mop)) | 
                                           (opcode_trim inside {VALU_CFG_T} & 
                                             (fn3 inside {OPCFG_fn3} & 
                                               (decode.instruction[31:25] == 7'b1000000))));
 
     // rd   : VALU_CFG_T [ OPFVV (vfmv.f.s) | OPMVV (vmv.x.s, vfirst.m, vcpop.m) | OPMVX () | OPCFG (all but rd=rs1=0) ]
-    assign vfu_uses_rd = is_vx & opcode_trim inside {VALU_CFG_T} & ((fn3 inside {OPFVV_fn3, OPMVV_fn3} & (fn6 == VW_XF_UNARY0_fn6)) | (fn3 inside {OPCFG_fn3} & ((decode.instruction[31:30] == 2'b11) | ((decode.instruction[31:30] != 2'b11) & ~(decode.instruction[19:15] == 5'd0 && decode.instruction[11:7] == 5'd0)))));
+    assign vxu_uses_rd = is_vx & opcode_trim inside {VALU_CFG_T} & ((fn3 inside {OPFVV_fn3, OPMVV_fn3} & (fn6 == VW_XF_UNARY0_fn6)) | (fn3 inside {OPCFG_fn3} & ((decode.instruction[31:30] == 2'b11) | ((decode.instruction[31:30] != 2'b11) & ~(decode.instruction[19:15] == 5'd0 && decode.instruction[11:7] == 5'd0))))) & |rd_addr;
 
     ////////////////////////////////////////////////////
     //Unit Determination
