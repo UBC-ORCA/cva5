@@ -35,6 +35,15 @@ module vxu
       VD  = 4
     } addr_attr_t;
 
+    localparam NUM_RESP_PORTS = 3;
+
+    typedef enum bit [2-1:0] {
+      FENCE = 0,
+      RVV   = 1,
+      PERF  = 2
+    } resp_port_t;
+
+
     // RVV-LITE
     localparam VLEN               = 1024;             // vector length in bits
     localparam XLEN               = 32;               // not sure; data width maybe?
@@ -67,6 +76,7 @@ module vxu
     localparam FXP_ENABLE         = 0;
     localparam MASK_ENABLE_EXT    = 0;
     localparam EN_128_MUL         = 1;
+    localparam NUM_RVV_PERF_COUNTERS = 2;
     
     logic rvv_req_ready;
     logic rvv_req_valid;
@@ -80,6 +90,7 @@ module vxu
     logic [XLEN-1:0] rvv_resp_data;
 
     logic scoreboard [NUM_VREGS];
+    logic [32-1:0] rvv_perf_cnts [NUM_RVV_PERF_COUNTERS];
 
     logic [C_M_CXU_REQ_ID_W-1:0] rvv_req_id;
 
@@ -116,8 +127,9 @@ module vxu
       .SHIFT64_ENABLE(SHIFT64_ENABLE),
       .FXP_ENABLE(FXP_ENABLE),
       .MASK_ENABLE_EXT(MASK_ENABLE_EXT),
-      .EN_128_MUL(EN_128_MUL)) 
-    rvv_proc_main_block (
+      .EN_128_MUL(EN_128_MUL),
+      .NUM_PERF_COUNTERS(NUM_RVV_PERF_COUNTERS)) 
+    rvv_block (
       .clk(i_clk), 
       .rst(i_rst),
       .req_ready(rvv_req_ready),
@@ -135,6 +147,7 @@ module vxu
       .m_write_req(m_write_req),
       .s_read_stream(s_read_stream),
       .m_write_stream(m_write_stream),
+      .perf_cnts(rvv_perf_cnts),
       .read_scoreboard(scoreboard));
 
     ////////////////////////////////////////////////////
@@ -185,11 +198,9 @@ module vxu
 
     function logic stall_insn (logic [STATE_ID_WIDTH-1:0] state,
                                logic [C_M_CXU_INSN_W-1:0] insn,
-                               logic scoreboard [NUM_VREGS],
-                               logic read_queue_valid);
+                               logic scoreboard [NUM_VREGS]);
       logic raw;
       logic waw;
-      logic wait_cfg;
 
       raw = (uses_addr(insn, VS1) & scoreboard[get_addr(state, insn, VS1)]) |
             (uses_addr(insn, VS2) & scoreboard[get_addr(state, insn, VS2)]) |
@@ -197,16 +208,15 @@ module vxu
             (uses_addr(insn, VM)  & (scoreboard[get_addr(state, insn, VM)] | 
                                      scoreboard[get_addr(state, insn, VD)]));
       waw = uses_addr(insn, VD) & scoreboard[get_addr(state, insn, VD)];
-      wait_cfg = is_cx_cfg(insn) & read_queue_valid;
 
-      return raw | waw | wait_cfg;
+      return raw | waw;
     endfunction
 
     logic insn_queue_stalls [NUM_QUEUES];
 
     for (q = 0; q < NUM_QUEUES; ++q) begin
       assign insn_queue_stalls[q] = stall_insn(q, insn_queue_data_outs[q][0 +: C_M_CXU_INSN_W], 
-                                               scoreboard, read_queue_valids[q]);
+                                               scoreboard);
     end
 
     ////////////////////////////////////////////////////
@@ -376,11 +386,10 @@ module vxu
 
     for (q = 0; q < NUM_QUEUES; ++q) begin
       always_comb begin
-        valid_ins[(0*NUM_QUEUES+q)*1 +: 1] = read_queue_valids[q] & |reads_to_commit[q] & ~id_buffers[RVV].full;
+        valid_ins[(0*NUM_QUEUES+q)*1 +: 1] = read_queue_valids[q] & |reads_to_commit[q];
         valid_ins[(1*NUM_QUEUES+q)*1 +: 1] = insn_queue_valids[q] & ~(insn_queue_reads[q] ? read_queue_fulls[q] : 
                                                                                             |reads_to_issue[q] | 
-                                                                                            insn_queue_stalls[q] | 
-                                                                                            id_buffers[RVV].full);
+                                                                                            insn_queue_stalls[q]);
         data_ins[(0*NUM_QUEUES+q)*QUEUE_WIDTH +: QUEUE_WIDTH] = read_queue_data_outs[q];
         data_ins[(1*NUM_QUEUES+q)*QUEUE_WIDTH +: QUEUE_WIDTH] = insn_queue_data_outs[q];
         id_ins[(0*NUM_QUEUES+q)*1 +: 1] = 1'b0;
@@ -389,12 +398,17 @@ module vxu
     end
     
     always_comb begin
-      ready_out = rvv_req_ready;
-      rvv_req_valid = valid_out;
       {rvv_req_track_id, rvv_req_id, rvv_req_data1, rvv_req_data0, rvv_req_insn} = data_out;
       _dummy = id_out[0 +: 1];
       rvv_req_state = id_out[1 +: $clog2(NUM_QUEUES)]; 
       rvv_req_read_attr = id_out[$clog2(NUM_QUEUES)+1 +: $clog2(2)] ? READ_ISSUE : READ_COMMIT;
+      if ((is_cx_mem_read(rvv_req_insn) && rvv_req_read_attr == READ_ISSUE) || ~id_buffers[RVV].full) begin
+        rvv_req_valid = valid_out;
+        ready_out = rvv_req_ready;
+      end else begin
+        rvv_req_valid = 1'b0;
+        ready_out = 1'b0;
+      end
     end
 
     ////////////////////////////////////////////////////
@@ -692,14 +706,6 @@ module vxu
     // Response priority arbiter FENCE-RVV
     ////////////////////////////////////////////////////
 
-    localparam NUM_RESP_PORTS = 3;
-
-    typedef enum bit [2-1:0] {
-      FENCE = 0,
-      RVV   = 1,
-      PERF  = 2
-    } resp_port_t;
-
     typedef struct packed {
       logic [C_M_CXU_DATA_W-1:0]    data;
       logic [C_M_CXU_STATUS_W-1:0]  status;
@@ -767,7 +773,7 @@ module vxu
     for (r = 0; r < NUM_RESP_PORTS; ++r) begin
       cva5_fifo #(
         .DATA_WIDTH(C_M_CXU_REQ_ID_W),
-        .FIFO_DEPTH(8))  //TODO: Reduce FENCE id buffer's depth
+        .FIFO_DEPTH(16))  //TODO: Reduce FENCE id buffer's depth
       id_buffer_block (
         .clk (i_clk),
         .rst (i_rst),
@@ -834,35 +840,42 @@ module vxu
     // Performace counters
     ////////////////////////////////////////////////////
 
-    localparam NUM_PERF_COUNTERS = 2; 
+    localparam NUM_VXU_PERF_COUNTERS = NUM_RVV_PERF_COUNTERS+2; 
 
     typedef enum int unsigned {
-      READY = 0,
-      PROCESSED = 1
+      NBVL_CC    = 0,
+      NBVL_IC    = 1,
+      ALU_BUBBLE = 2,
+      ALU_INUSE  = 3
     } cnt_t;
 
-    logic [32-1:0] cnts [NUM_PERF_COUNTERS];
+    logic [32-1:0] cnts [NUM_VXU_PERF_COUNTERS];
     logic [32-1:0] running_cnt;
 
     always_ff @(posedge i_clk) begin
-      if (rvv_req_ready) begin
-        if (running_cnt > 0) begin
+      if (rvv_req_ready & rvv_req_insn inside {VLOAD} & rvv_req_read_attr == READ_COMMIT) begin
+        if (running_cnt == 1) begin
           running_cnt <= running_cnt + 1;
         end
 
         if (rvv_req_valid) begin
-          cnts[PROCESSED] <= cnts[PROCESSED] + 1;
-          cnts[READY] <= cnts[READY] + running_cnt;
+          cnts[NBVL_IC] <= cnts[NBVL_IC] + 1;
+          cnts[NBVL_CC] <= cnts[NBVL_CC] + running_cnt;
           running_cnt <= 1;
         end
       end
 
       if (i_rst) begin
         running_cnt <= 0;
-        for (int i = 0; i < NUM_PERF_COUNTERS; ++i) begin
+        for (int i = 0; i < NUM_VXU_PERF_COUNTERS-NUM_RVV_PERF_COUNTERS; ++i) begin
           cnts[i] <= 0;
         end
       end
+    end
+
+    always_comb begin
+      cnts[ALU_BUBBLE] = rvv_perf_cnts[0];
+      cnts[ALU_INUSE]  = rvv_perf_cnts[1];
     end
 
     ////////////////////////////////////////////////////
