@@ -254,30 +254,37 @@ module cva5_sim
     l1_to_axi  arb(.*, .cpu(l2), .axi(axi));
     cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*);
 
+    // CXU 0: CRC 
+    cx_crc_unit cx_crc_unit_block (
+      .i_clk(clk),
+      .i_rst(rst),
+      .s_cxu(cxus[0]));
+
+    // CXU 2: VFU
     localparam STATE_ID_WIDTH      = C_M_CXU_STATE_ID_W;
     localparam QUEUE_DEPTH         = 8*MAX_IDS;
     localparam MAX_READ_IN_FLIGHT  = 1;
     localparam MAX_WRITE_IN_FLIGHT = 1;
 
-    for (k = 0; k < NUM_CXUS; ++k) begin
-      vxu #(
-        .STATE_ID_WIDTH(STATE_ID_WIDTH),
-        .QUEUE_DEPTH(QUEUE_DEPTH),
-        .MAX_READ_IN_FLIGHT(MAX_READ_IN_FLIGHT),
-        .MAX_WRITE_IN_FLIGHT(MAX_READ_IN_FLIGHT))
-      vxu_block (
-        .i_clk(clk),
-        .i_rst(rst),
-        .s_cxu(cxus[k]),
-        .s_alloc_resp(alloc_resps[k]),
-        .s_lkup_resp(lkup_resps[k]),
-        .m_alloc_req(alloc_reqs[k]),
-        .m_lkup_req(lkup_reqs[k]),
-        .m_read_req(read_reqs[k]),
-        .m_write_req(write_reqs[k]),
-        .s_read_stream(read_streams[k]),
-        .m_write_stream(write_streams[k]));
-    end
+    vxu #(
+      .STATE_ID_WIDTH(STATE_ID_WIDTH),
+      .QUEUE_DEPTH(QUEUE_DEPTH),
+      .MAX_READ_IN_FLIGHT(MAX_READ_IN_FLIGHT),
+      .MAX_WRITE_IN_FLIGHT(MAX_READ_IN_FLIGHT))
+    vxu_block (
+      .i_clk(clk),
+      .i_rst(rst),
+      .s_cxu(cxus[1]),
+      .s_alloc_resp(alloc_resps[1]),
+      .s_lkup_resp(lkup_resps[1]),
+      .m_alloc_req(alloc_reqs[1]),
+      .m_lkup_req(lkup_reqs[1]),
+      .m_read_req(read_reqs[1]),
+      .m_write_req(write_reqs[1]),
+      .s_read_stream(read_streams[1]),
+      .m_write_stream(write_streams[1]));
+
+    // CX SWITCH
 
     cx_switch_unit #(
       .NUM_SLAVES(2))
