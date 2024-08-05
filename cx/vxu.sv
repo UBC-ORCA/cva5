@@ -76,7 +76,7 @@ module vxu
     localparam FXP_ENABLE         = 0;
     localparam MASK_ENABLE_EXT    = 0;
     localparam EN_128_MUL         = 1;
-    localparam NUM_RVV_PERF_COUNTERS = 2;
+    localparam NUM_RVV_PERF_COUNTERS = 6;
     
     logic rvv_req_ready;
     logic rvv_req_valid;
@@ -773,7 +773,7 @@ module vxu
     for (r = 0; r < NUM_RESP_PORTS; ++r) begin
       cva5_fifo #(
         .DATA_WIDTH(C_M_CXU_REQ_ID_W),
-        .FIFO_DEPTH(16))  //TODO: Reduce FENCE id buffer's depth
+        .FIFO_DEPTH(64))  //TODO: Reduce FENCE id buffer's depth
       id_buffer_block (
         .clk (i_clk),
         .rst (i_rst),
@@ -813,7 +813,7 @@ module vxu
     for (r = 1; r < NUM_RESP_PORTS; ++r) begin
       cva5_fifo #(
         .DATA_WIDTH(C_M_CXU_DATA_W), 
-        .FIFO_DEPTH(8)) 
+        .FIFO_DEPTH(64)) 
       data_buffer_block (
         .clk (i_clk),
         .rst (i_rst),
@@ -840,13 +840,14 @@ module vxu
     // Performace counters
     ////////////////////////////////////////////////////
 
-    localparam NUM_VXU_PERF_COUNTERS = NUM_RVV_PERF_COUNTERS+2; 
+    localparam NUM_VXU_PERF_COUNTERS = 2+NUM_RVV_PERF_COUNTERS; 
 
     typedef enum int unsigned {
       NBVL_CC    = 0,
       NBVL_IC    = 1,
       ALU_BUBBLE = 2,
-      ALU_INUSE  = 3
+      ALU_INUSE  = 3,
+      ALU_STALL  = 4
     } cnt_t;
 
     logic [32-1:0] cnts [NUM_VXU_PERF_COUNTERS];
@@ -876,6 +877,9 @@ module vxu
     always_comb begin
       cnts[ALU_BUBBLE] = rvv_perf_cnts[0];
       cnts[ALU_INUSE]  = rvv_perf_cnts[1];
+      for (int i = 0; i < 4; ++i) begin
+        cnts[ALU_STALL+i] = rvv_perf_cnts[2+i]; 
+      end
     end
 
     ////////////////////////////////////////////////////
