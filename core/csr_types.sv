@@ -160,8 +160,9 @@ package csr_types;
     } mcause_t;
 
     typedef struct packed {
-        logic en;
-        logic [30:24] reserved;
+        logic [31:29] version;
+        logic [28:28] cxe;
+        logic [27:24] reserved;
         logic [23:16] state_id;
         logic [15:8] reserved1;
         logic [7:0] cxu_id;

@@ -527,7 +527,7 @@ generate if (CONFIG.INCLUDE_M_MODE) begin : gen_csr_m_mode
     ////////////////////////////////////////////////////
     //mcx_selector
     //TODO : masks
-    assign cxu_req_en = mcx_selector.en;
+    assign cxu_req_en = mcx_selector.version == 3'b001;
     assign cxu.req_cxu = mcx_selector.cxu_id;
     assign cxu.req_state = mcx_selector.state_id;
 
