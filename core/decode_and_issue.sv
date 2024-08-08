@@ -170,8 +170,8 @@ module decode_and_issue
 
     assign is_cx_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & (csr_addr inside {CUSTOM_URW_CSR});
     assign is_csr = CONFIG.INCLUDE_CSRS & (opcode_trim == SYSTEM_T) & (fn3 != 0) & ~is_cx_csr;
-    assign is_cx = (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T, CUSTOM_2_T} | is_cx_csr) & cxu_req_en;
-    assign is_vx = opcode_trim inside {VALU_CFG_T, VLOAD_T, VSTORE_T} & cxu_req_en;
+    assign is_cx = (opcode_trim inside {CUSTOM_0_T, CUSTOM_1_T, CUSTOM_2_T} | is_cx_csr);
+    assign is_vx = opcode_trim inside {VALU_CFG_T, VLOAD_T, VSTORE_T};
     assign is_fence = (opcode_trim == FENCE_T) & ~fn3[0];
     assign is_ifence = CONFIG.INCLUDE_IFENCE & (opcode_trim == FENCE_T) & fn3[0];
     assign csr_imm_op = (opcode_trim == SYSTEM_T) & fn3[2] & ~is_cx_csr;
@@ -598,7 +598,7 @@ module decode_and_issue
     assign cxu.req_insn  = issue.instruction; // TODO : if not CXU, req_insn = 0
     assign cxu.req_data0 = rf.data[RS1];
     assign cxu.req_data1 = cx_imm_type ? 32'(issue.instruction[31:24]) : rf.data[RS2];
-    assign cxu.req_valid = unit_issue[UNIT_IDS.CXU].new_request;
+    assign cxu.req_valid = unit_issue[UNIT_IDS.CXU].new_request & cxu_req_en;
 
     localparam [31:0] VSETVLI         = 32'b0????????????????_111_?????_1010111;
     localparam [31:0] VSETIVLI        = 32'b11???????????????_111_?????_1010111;
