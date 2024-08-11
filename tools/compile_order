@@ -153,6 +153,7 @@ verilog-axis/rtl/axis_arb_mux.v
 verilog-axis/rtl/axis_demux.v
 
 cx/cx_tracker.sv
+cx/cx_inval_unit.sv
 cx/cx_dma_unit.sv
 cx/cx_switch_unit.sv
 cx/crc.sv

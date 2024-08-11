@@ -168,7 +168,7 @@ module cva5_sim
             USE_EXTERNAL_INVALIDATIONS : 1,
             USE_NON_CACHEABLE : 1,
             NON_CACHEABLE : '{
-				L : 32'h80000000, // -> 32'h80000000 when running rvv-tests
+				L : 32'h88000000,
 				H : 32'h8FFFFFFF
             }
         },
@@ -254,12 +254,21 @@ module cva5_sim
     l1_to_axi  arb(.*, .cpu(l2), .axi(axi));
     cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*);
 
+    // CXU 0: CRC 
+    /*
+    cx_crc_unit cx_crc_unit_block (
+      .i_clk(clk),
+      .i_rst(rst),
+      .s_cxu(cxus[1]));
+    */
+
+    // CXU 2: VFU
     localparam STATE_ID_WIDTH      = C_M_CXU_STATE_ID_W;
     localparam QUEUE_DEPTH         = 8*MAX_IDS;
     localparam MAX_READ_IN_FLIGHT  = 1;
     localparam MAX_WRITE_IN_FLIGHT = 1;
 
-    for (k = 0; k < NUM_CXUS; ++k) begin
+    for (k = 0; k < NUM_CXUS; ++k) begin 
       vxu #(
         .STATE_ID_WIDTH(STATE_ID_WIDTH),
         .QUEUE_DEPTH(QUEUE_DEPTH),
@@ -279,6 +288,8 @@ module cva5_sim
         .m_write_stream(write_streams[k]));
     end
 
+    // CX SWITCH
+
     cx_switch_unit #(
       .NUM_SLAVES(2))
     cx_switch_unit_block (
@@ -286,10 +297,6 @@ module cva5_sim
       .i_rst(rst),
       .i_cxu(cxu),
       .o_cxus(cxus));
-
-    //FIXME
-    assign inv_valid = 0;
-    assign inv_addr = 0;
 
     ////////////////////////////////////////////////////
     // DMA
@@ -349,7 +356,10 @@ module cva5_sim
       .s_read_reqs(read_reqs),
       .s_write_reqs(write_reqs),
       .m_read_streams(read_streams),
-      .s_write_streams(write_streams));
+      .s_write_streams(write_streams),
+      .inv_ack(inv_ack),
+      .inv_valid(inv_valid),
+      .inv_addr(inv_addr));
 
     ////////////////////////////////////////////////////
     //AXI adapter

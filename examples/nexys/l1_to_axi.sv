@@ -182,6 +182,10 @@ module l1_to_axi
     assign cpu.rd_in_flight = request_fifo.valid ||  reads_count != 0;
     assign cpu.wr_in_flight = request_fifo.valid || writes_count != 0;
 
+    assign cpu.inv_valid = inv_valid;
+    assign cpu.inv_addr  = inv_addr[32-1:2];
+    assign inv_ack = cpu.inv_ack;
+
     ////////////////////////////////////////////////////
     //Return Path
     //L1 always acks data, no need for rd_data_ack

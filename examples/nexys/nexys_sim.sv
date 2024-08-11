@@ -168,7 +168,7 @@ module cva5_sim
             USE_EXTERNAL_INVALIDATIONS : 1,
             USE_NON_CACHEABLE : 1,
             NON_CACHEABLE : '{
-				L : 32'h80000000, // -> 32'h80000000 when running rvv-tests
+				L : 32'h88000000,
 				H : 32'h8FFFFFFF
             }
         },
@@ -255,10 +255,12 @@ module cva5_sim
     cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*);
 
     // CXU 0: CRC 
+    /*
     cx_crc_unit cx_crc_unit_block (
       .i_clk(clk),
       .i_rst(rst),
-      .s_cxu(cxus[0]));
+      .s_cxu(cxus[1]));
+    */
 
     // CXU 2: VFU
     localparam STATE_ID_WIDTH      = C_M_CXU_STATE_ID_W;
@@ -266,23 +268,25 @@ module cva5_sim
     localparam MAX_READ_IN_FLIGHT  = 1;
     localparam MAX_WRITE_IN_FLIGHT = 1;
 
-    vxu #(
-      .STATE_ID_WIDTH(STATE_ID_WIDTH),
-      .QUEUE_DEPTH(QUEUE_DEPTH),
-      .MAX_READ_IN_FLIGHT(MAX_READ_IN_FLIGHT),
-      .MAX_WRITE_IN_FLIGHT(MAX_READ_IN_FLIGHT))
-    vxu_block (
-      .i_clk(clk),
-      .i_rst(rst),
-      .s_cxu(cxus[1]),
-      .s_alloc_resp(alloc_resps[1]),
-      .s_lkup_resp(lkup_resps[1]),
-      .m_alloc_req(alloc_reqs[1]),
-      .m_lkup_req(lkup_reqs[1]),
-      .m_read_req(read_reqs[1]),
-      .m_write_req(write_reqs[1]),
-      .s_read_stream(read_streams[1]),
-      .m_write_stream(write_streams[1]));
+    for (k = 0; k < NUM_CXUS; ++k) begin 
+      vxu #(
+        .STATE_ID_WIDTH(STATE_ID_WIDTH),
+        .QUEUE_DEPTH(QUEUE_DEPTH),
+        .MAX_READ_IN_FLIGHT(MAX_READ_IN_FLIGHT),
+        .MAX_WRITE_IN_FLIGHT(MAX_READ_IN_FLIGHT))
+      vxu_block (
+        .i_clk(clk),
+        .i_rst(rst),
+        .s_cxu(cxus[k]),
+        .s_alloc_resp(alloc_resps[k]),
+        .s_lkup_resp(lkup_resps[k]),
+        .m_alloc_req(alloc_reqs[k]),
+        .m_lkup_req(lkup_reqs[k]),
+        .m_read_req(read_reqs[k]),
+        .m_write_req(write_reqs[k]),
+        .s_read_stream(read_streams[k]),
+        .m_write_stream(write_streams[k]));
+    end
 
     // CX SWITCH
 
@@ -293,10 +297,6 @@ module cva5_sim
       .i_rst(rst),
       .i_cxu(cxu),
       .o_cxus(cxus));
-
-    //FIXME
-    assign inv_valid = 0;
-    assign inv_addr = 0;
 
     ////////////////////////////////////////////////////
     // DMA
@@ -356,7 +356,10 @@ module cva5_sim
       .s_read_reqs(read_reqs),
       .s_write_reqs(write_reqs),
       .m_read_streams(read_streams),
-      .s_write_streams(write_streams));
+      .s_write_streams(write_streams),
+      .inv_ack(inv_ack),
+      .inv_valid(inv_valid),
+      .inv_addr(inv_addr));
 
     ////////////////////////////////////////////////////
     //AXI adapter

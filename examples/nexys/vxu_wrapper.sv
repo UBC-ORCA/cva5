@@ -237,6 +237,9 @@ import cx_dma_types::*;
     .s_read_reqs(read_reqs),
     .s_write_reqs(write_reqs),
     .m_read_streams(read_streams),
-    .s_write_streams(write_streams));
+    .s_write_streams(write_streams),
+    .inv_ack(inv_ack),
+    .inv_valid(inv_valid),
+    .inv_addr(inv_addr));
 
 endmodule

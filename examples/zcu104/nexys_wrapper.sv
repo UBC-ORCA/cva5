@@ -156,7 +156,7 @@ module nexys_wrapper
             LINES : 1024,
             LINE_W : 8,
             WAYS : 2,
-            USE_EXTERNAL_INVALIDATIONS : 0,
+            USE_EXTERNAL_INVALIDATIONS : 1,
             USE_NON_CACHEABLE : 1,
             NON_CACHEABLE : '{
                                 L : 32'h88000000, 

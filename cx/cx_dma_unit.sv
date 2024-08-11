@@ -19,7 +19,10 @@ module cx_dma_unit
     gen_interface.slave     s_read_reqs     [NUM_CXUS],
     gen_interface.slave     s_write_reqs    [NUM_CXUS],
     stream_interface.master m_read_streams  [NUM_CXUS],
-    stream_interface.slave  s_write_streams [NUM_CXUS]
+    stream_interface.slave  s_write_streams [NUM_CXUS],
+    input  logic inv_ack,
+    output logic inv_valid,
+    output logic [32-1:0] inv_addr
   );
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -118,8 +121,8 @@ module cx_dma_unit
   end
 
   always_comb begin
-    mem_reqs[WRITE].ready = m_axi.awready;
-    m_axi.awvalid = mem_reqs[WRITE].valid;
+    mem_reqs[WRITE].ready = m_axi.awready & inv_ready;
+    m_axi.awvalid = mem_reqs[WRITE].valid & inv_ready;
     m_axi.awaddr  = mem_packets[WRITE].base_address;
     m_axi.awlen   = ((mem_packets[WRITE].end_address - mem_packets[WRITE].base_address + 1) >> 
                     mem_packets[WRITE].size) - 1;
@@ -508,6 +511,18 @@ module cx_dma_unit
 
   /////////////////////////////////////////////////////////////////////////////////////////////////
   // TODO: coherence invalidation
+  logic inv_ready;
+
+  cx_inval_unit cx_inval_unit_block (
+    .i_clk(i_clk),
+    .i_rst(i_rst),
+    .o_ready(inv_ready),
+    .i_valid(mem_reqs[WRITE].ready & mem_reqs[WRITE].valid),
+    .i_base_address(mem_packets[WRITE].base_address),
+    .i_end_address(mem_packets[WRITE].end_address),
+    .inv_ack(inv_ack),
+    .inv_valid(inv_valid),
+    .inv_addr(inv_addr));
   
   ////////////////////////////////////////////////////
   //Assertions
