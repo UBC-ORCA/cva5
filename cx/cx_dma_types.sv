@@ -3,7 +3,7 @@ package cx_dma_types;
   localparam MEM_PORTS      = 2;
   localparam MEM_ADDR_WIDTH = 32;
   localparam MEM_DATA_WIDTH = 64;
-  localparam TRACK_ID_WIDTH = 4;
+  localparam TRACK_ID_WIDTH = 6;
   localparam STATE_ID_WIDTH = 8;
   localparam MEM_ID_WIDTH   = TRACK_ID_WIDTH + STATE_ID_WIDTH;
 

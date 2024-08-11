@@ -18,14 +18,14 @@ import cx_dma_types::*;
   output logic [3-1:0] m_axi_arsize,
   output logic [2-1:0] m_axi_arburst,
   output logic [4-1:0] m_axi_arcache,
-  output logic [1+8+4-1:0] m_axi_arid,
+  output logic [1+8+6-1:0] m_axi_arid,
 
   output logic m_axi_rready,
   input  logic m_axi_rvalid,
   input  logic [64-1:0] m_axi_rdata,
   input  logic [2-1:0] m_axi_rresp,
   input  logic m_axi_rlast,
-  input  logic [1+8+4-1:0] m_axi_rid,
+  input  logic [1+8+6-1:0] m_axi_rid,
 
   input  logic m_axi_awready,
   output logic m_axi_awvalid,
@@ -34,7 +34,7 @@ import cx_dma_types::*;
   output logic [3-1:0] m_axi_awsize,
   output logic [2-1:0] m_axi_awburst,
   output logic [4-1:0] m_axi_awcache,
-  output logic [1+8+4-1:0] m_axi_awid,
+  output logic [1+8+6-1:0] m_axi_awid,
 
   input  logic m_axi_wready,
   output logic m_axi_wvalid,
@@ -45,7 +45,7 @@ import cx_dma_types::*;
   output logic m_axi_bready,
   input  logic m_axi_bvalid,
   input  logic [2-1:0] m_axi_bresp,
-  input  logic [1+8+4-1:0] m_axi_bid,
+  input  logic [1+8+6-1:0] m_axi_bid,
   
   // INVALIDATION
   input  logic inv_ack,

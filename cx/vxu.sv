@@ -773,7 +773,7 @@ module vxu
     for (r = 0; r < NUM_RESP_PORTS; ++r) begin
       cva5_fifo #(
         .DATA_WIDTH(C_M_CXU_REQ_ID_W),
-        .FIFO_DEPTH(64))  //TODO: Reduce FENCE id buffer's depth
+        .FIFO_DEPTH(8))  //TODO: Reduce FENCE id buffer's depth
       id_buffer_block (
         .clk (i_clk),
         .rst (i_rst),
@@ -813,7 +813,7 @@ module vxu
     for (r = 1; r < NUM_RESP_PORTS; ++r) begin
       cva5_fifo #(
         .DATA_WIDTH(C_M_CXU_DATA_W), 
-        .FIFO_DEPTH(64)) 
+        .FIFO_DEPTH(8)) 
       data_buffer_block (
         .clk (i_clk),
         .rst (i_rst),
