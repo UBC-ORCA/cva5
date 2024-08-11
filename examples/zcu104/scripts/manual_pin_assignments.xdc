@@ -1,23 +1,23 @@
 set_property PACKAGE_PIN M11 [get_ports reset]
 set_property IOSTANDARD LVCMOS33 [get_ports reset]
 
-set_property PACKAGE_PIN F4       [get_ports dip_switch_4bits_tri_i[3]] ;# Bank  88 VCCO - VCC3V3   - IO_L9N_AD11N_88
-set_property IOSTANDARD  LVCMOS33 [get_ports dip_switch_4bits_tri_i[3]] ;# Bank  88 VCCO - VCC3V3   - IO_L9N_AD11N_88
-set_property PACKAGE_PIN F5       [get_ports dip_switch_4bits_tri_i[2]] ;# Bank  88 VCCO - VCC3V3   - IO_L9P_AD11P_88
-set_property IOSTANDARD  LVCMOS33 [get_ports dip_switch_4bits_tri_i[2]] ;# Bank  88 VCCO - VCC3V3   - IO_L9P_AD11P_88
-set_property PACKAGE_PIN D4       [get_ports dip_switch_4bits_tri_i[1]] ;# Bank  88 VCCO - VCC3V3   - IO_L8N_HDGC_88
-set_property IOSTANDARD  LVCMOS33 [get_ports dip_switch_4bits_tri_i[1]] ;# Bank  88 VCCO - VCC3V3   - IO_L8N_HDGC_88
-set_property PACKAGE_PIN E4       [get_ports dip_switch_4bits_tri_i[0]] ;# Bank  88 VCCO - VCC3V3   - IO_L8P_HDGC_88
-set_property IOSTANDARD  LVCMOS33 [get_ports dip_switch_4bits_tri_i[0]] ;# Bank  88 VCCO - VCC3V3   - IO_L8P_HDGC_88
+set_property PACKAGE_PIN F4 [get_ports {dip_switch_4bits_tri_i[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {dip_switch_4bits_tri_i[3]}]
+set_property PACKAGE_PIN F5 [get_ports {dip_switch_4bits_tri_i[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {dip_switch_4bits_tri_i[2]}]
+set_property PACKAGE_PIN D4 [get_ports {dip_switch_4bits_tri_i[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {dip_switch_4bits_tri_i[1]}]
+set_property PACKAGE_PIN E4 [get_ports {dip_switch_4bits_tri_i[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {dip_switch_4bits_tri_i[0]}]
 
 set_property PACKAGE_PIN A20      [get_ports uart2_pl_txd] ;# Bank  28 VCCO - VCC1V8   - IO_L21P_T3L_N4_AD8P_28
-set_property IOSTANDARD  LVCMOS18 [get_ports uart2_pl_txd] ;# Bank  28 VCCO - VCC1V8   - IO_L21P_T3L_N4_AD8P_28
+set_property IOSTANDARD LVCMOS18 [get_ports uart2_pl_txd]
 set_property PACKAGE_PIN C19      [get_ports uart2_pl_rxd] ;# Bank  28 VCCO - VCC1V8   - IO_L20N_T3L_N3_AD1N_28
-set_property IOSTANDARD  LVCMOS18 [get_ports uart2_pl_rxd] ;# Bank  28 VCCO - VCC1V8   - IO_L20N_T3L_N3_AD1N_28
+set_property IOSTANDARD LVCMOS18 [get_ports uart2_pl_rxd]
 
-set_property PACKAGE_PIN AH18 [get_ports diff_clk_clk_p]
 set_property IOSTANDARD DIFF_SSTL12 [get_ports diff_clk_clk_p]
-set_property PACKAGE_PIN AH17 [ get_ports diff_clk_clk_n]
+set_property PACKAGE_PIN AH18 [get_ports diff_clk_clk_p]
+set_property PACKAGE_PIN AH17 [get_ports diff_clk_clk_n]
 set_property IOSTANDARD DIFF_SSTL12 [get_ports diff_clk_clk_n]
 
 set_property PACKAGE_PIN AG20 [get_ports {ddr4_sdram_dq[4]}]
@@ -37,7 +37,7 @@ set_property PACKAGE_PIN AB14 [get_ports ddr4_sdram_reset_n]
 set_property PACKAGE_PIN AF11 [get_ports {ddr4_sdram_dm_n[4]}]
 set_property PACKAGE_PIN AN19 [get_ports {ddr4_sdram_dq[30]}]
 set_property PACKAGE_PIN AM19 [get_ports {ddr4_sdram_dq[31]}]
-set_property PACKAGE_PIN AE15 [get_ports {ddr4_sdram_odt}]
+set_property PACKAGE_PIN AE15 [get_ports {ddr4_sdram_odt[0]}]
 set_property PACKAGE_PIN AP22 [get_ports {ddr4_sdram_dq[28]}]
 set_property PACKAGE_PIN AP21 [get_ports {ddr4_sdram_dq[29]}]
 set_property PACKAGE_PIN AP9 [get_ports {ddr4_sdram_dq[62]}]
@@ -48,11 +48,11 @@ set_property PACKAGE_PIN AM21 [get_ports {ddr4_sdram_dqs_t[3]}]
 set_property PACKAGE_PIN AN21 [get_ports {ddr4_sdram_dqs_c[3]}]
 set_property PACKAGE_PIN AP10 [get_ports {ddr4_sdram_dq[63]}]
 set_property PACKAGE_PIN AN12 [get_ports {ddr4_sdram_dm_n[7]}]
-set_property PACKAGE_PIN AD17 [get_ports {ddr4_sdram_cke}]
-set_property PACKAGE_PIN AA15 [get_ports {ddr4_sdram_cs_n}]
+set_property PACKAGE_PIN AD17 [get_ports {ddr4_sdram_cke[0]}]
+set_property PACKAGE_PIN AA15 [get_ports {ddr4_sdram_cs_n[0]}]
 set_property PACKAGE_PIN AP19 [get_ports {ddr4_sdram_dm_n[3]}]
-set_property PACKAGE_PIN AN8 [get_ports {ddr4_sdram_dqs_c[7]}]
 set_property PACKAGE_PIN AN9 [get_ports {ddr4_sdram_dqs_t[7]}]
+set_property PACKAGE_PIN AN8 [get_ports {ddr4_sdram_dqs_c[7]}]
 set_property PACKAGE_PIN AL12 [get_ports {ddr4_sdram_dq[52]}]
 set_property PACKAGE_PIN AC16 [get_ports {ddr4_sdram_bg[0]}]
 set_property PACKAGE_PIN AL16 [get_ports {ddr4_sdram_ba[1]}]
@@ -88,8 +88,8 @@ set_property PACKAGE_PIN AA18 [get_ports {ddr4_sdram_dqs_t[1]}]
 set_property PACKAGE_PIN AB18 [get_ports {ddr4_sdram_dqs_c[1]}]
 set_property PACKAGE_PIN AE20 [get_ports {ddr4_sdram_dq[12]}]
 set_property PACKAGE_PIN AB19 [get_ports {ddr4_sdram_dq[15]}]
-set_property PACKAGE_PIN AH9 [get_ports {ddr4_sdram_dqs_c[5]}]
 set_property PACKAGE_PIN AG9 [get_ports {ddr4_sdram_dqs_t[5]}]
+set_property PACKAGE_PIN AH9 [get_ports {ddr4_sdram_dqs_c[5]}]
 set_property PACKAGE_PIN AF15 [get_ports {ddr4_sdram_adr[3]}]
 set_property PACKAGE_PIN AF17 [get_ports {ddr4_sdram_adr[7]}]
 set_property PACKAGE_PIN AH14 [get_ports {ddr4_sdram_adr[6]}]
@@ -102,7 +102,7 @@ set_property PACKAGE_PIN AK17 [get_ports {ddr4_sdram_adr[8]}]
 set_property PACKAGE_PIN AD15 [get_ports {ddr4_sdram_adr[16]}]
 set_property PACKAGE_PIN AJ14 [get_ports {ddr4_sdram_adr[5]}]
 set_property PACKAGE_PIN AL15 [get_ports {ddr4_sdram_ba[0]}]
-set_property PACKAGE_PIN AF18 [get_ports {ddr4_sdram_ck_t}]
+set_property PACKAGE_PIN AF18 [get_ports {ddr4_sdram_ck_t[0]}]
 set_property PACKAGE_PIN AM11 [get_ports {ddr4_sdram_dq[59]}]
 set_property PACKAGE_PIN AM10 [get_ports {ddr4_sdram_dq[58]}]
 set_property PACKAGE_PIN AM9 [get_ports {ddr4_sdram_dq[57]}]
@@ -135,3 +135,4 @@ set_property PACKAGE_PIN AF21 [get_ports {ddr4_sdram_dq[3]}]
 set_property PACKAGE_PIN AF22 [get_ports {ddr4_sdram_dq[2]}]
 set_property PACKAGE_PIN AE23 [get_ports {ddr4_sdram_dq[1]}]
 set_property PACKAGE_PIN AE24 [get_ports {ddr4_sdram_dq[0]}]
+
