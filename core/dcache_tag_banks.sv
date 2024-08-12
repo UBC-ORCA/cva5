@@ -66,6 +66,7 @@ module dcache_tag_banks
     dtag_entry_t  tag_line_b [CONFIG.DCACHE.WAYS-1:0];
 
     dtag_entry_t new_tagline;
+    dtag_entry_t inv_tagline;
 
     logic [SCONFIG.LINE_ADDR_W-1:0] porta_addr;
     logic [SCONFIG.LINE_ADDR_W-1:0] portb_addr;
@@ -83,29 +84,39 @@ module dcache_tag_banks
     assign porta_addr = miss_req ? addr_utils.getTagLineAddr(miss_addr) : addr_utils.getTagLineAddr(inv_addr);
     assign portb_addr = load_req ? addr_utils.getTagLineAddr(load_addr) : addr_utils.getTagLineAddr(store_addr);
 
-    assign extern_inv_complete = external_inv & ~miss_req;
+    assign extern_inv_complete = external_inv;
 
     assign new_tagline = '{valid: miss_req, tag: addr_utils.getTag(miss_addr)};
+    assign inv_tagline = '{valid: 1'b0, tag: addr_utils.getTag(32'h0)};
 
     ////////////////////////////////////////////////////
     //Memory instantiation and hit detection
     generate for (genvar i = 0; i < CONFIG.DCACHE.WAYS; i++) begin : tag_bank_gen
-        tag_bank #($bits(dtag_entry_t), CONFIG.DCACHE.LINES) dtag_bank ( 
-            .clk (clk),
-            .rst (rst),
-            .en_a ((miss_req & miss_way[i]) | external_inv),
-            .wen_a ((miss_req & miss_way[i]) | external_inv),
-            .addr_a (porta_addr),
-            .data_in_a (new_tagline),
-            .data_out_a (tag_line_a[i]),
-            .en_b (store_req | load_req),
-            .wen_b ('0),
-            .addr_b (portb_addr),
-            .data_in_b ('0),
-            .data_out_b(tag_line_b[i])
-        );
+        mpram #(
+          .MEMD(CONFIG.DCACHE.LINES), 
+          .DATAW($bits(dtag_entry_t)),
+          .nRPORTS(2),
+          .nWPORTS(2),
+          .TYPE("XOR"),
+          .BYP("RAW"),
+          .IFILE("")) 
+        mpram_block ( 
+          .clk(clk),
+          .WEnb({external_inv, 
+                 (miss_req & miss_way[i])}),
+          .WAddr({inv_addr, 
+                  miss_addr}),
+          .WData({inv_tagline, 
+                  new_tagline}),
+          .WBe({{$bits(dtag_entry_t)/8{external_inv}},
+                {$bits(dtag_entry_t)/8{(miss_req & miss_way[i])}}}),
+          .RAddr({store_addr, 
+                  load_addr}),
+          .RData({tag_line_b[i], 
+                  tag_line_a[i]}));
+
         assign store_tag_hit_way[i] = ({store_req_r, 1'b1, addr_utils.getTag(store_addr_r)} == {1'b1, tag_line_b[i]});
-        assign load_tag_hit_way[i] = ({load_req_r, 1'b1, addr_utils.getTag(miss_addr)} == {1'b1, tag_line_b[i]});
+        assign load_tag_hit_way[i] = ({load_req_r, 1'b1, addr_utils.getTag(miss_addr)} == {1'b1, tag_line_a[i]});
     end endgenerate
 
     assign load_tag_hit = |load_tag_hit_way;

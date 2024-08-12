@@ -26,6 +26,8 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 }
 
 #import sources needed for blackbox packaging
+import_files -norecurse $sources_dir/rvv-lite/src/multiported-ram/config.vh
+import_files -norecurse $sources_dir/rvv-lite/src/multiported-ram/utils.vh
 import_files -norecurse $sources_dir/l2_arbiter/l2_external_interfaces.sv
 import_files -norecurse $sources_dir/local_memory/local_memory_interface.sv
 import_files -norecurse $sources_dir/cx/cxu_types.sv
@@ -112,6 +114,16 @@ import_files -force -fileset [get_filesets sources_1] $sources_dir/core/local_me
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/axi_master.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/avalon_master.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/wishbone_master.sv
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/config.vh
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/utils.vh
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mpram_gen.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mpram_gen_be.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/dpram.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/dpram_be.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mrram.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mrram_be.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mpram_xor.v
+import_files -force -fileset [get_filesets sources_1] $sources_dir/rvv-lite/src/multiported-ram/mpram.v
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/tag_bank.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/dcache_tag_banks.sv
 import_files -force -fileset [get_filesets sources_1] $sources_dir/core/amo_alu.sv
