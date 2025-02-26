@@ -105,7 +105,7 @@ module cva5_sim
 
     genvar k;
 
-    localparam NUM_CXUS = 2;
+    localparam NUM_CXUS = 1;
     localparam CXU_ID_WIDTH = NUM_CXUS > 1 ? $clog2(NUM_CXUS) : 1;
 
     localparam cpu_config_t NEXYS_CONFIG = '{
@@ -168,7 +168,7 @@ module cva5_sim
             USE_EXTERNAL_INVALIDATIONS : 1,
             USE_NON_CACHEABLE : 1,
             NON_CACHEABLE : '{
-				L : 32'h80000000, // -> 32'h80000000 when running rvv-tests
+				L : 32'h88000000,
 				H : 32'h8FFFFFFF
             }
         },
@@ -232,7 +232,7 @@ module cva5_sim
 
     // CXU
     cxu_interface cxu ();
-    cxu_interface cxus [NUM_CXUS] ();
+    cxu_interface cxus [NUM_CXUS+3] ();
 
     // INVALIDATION
     logic inv_ack;
@@ -254,54 +254,77 @@ module cva5_sim
     l1_to_axi  arb(.*, .cpu(l2), .axi(axi));
     cva5 #(.CONFIG(NEXYS_CONFIG)) cpu(.*);
 
-    // CXU 0: CRC 
-    cx_crc_unit cx_crc_unit_block (
+    // CXU 1: MAC
+    cx_mac_unit cx_mac_unit_block (
       .i_clk(clk),
       .i_rst(rst),
-      .s_cxu(cxus[0]));
+      .s_cxu(cxus[1]));
 
-    // CXU 2: VFU
+    // CXU 2: RELU
+    cx_relu_unit cx_relu_unit_block (
+      .i_clk(clk),
+      .i_rst(rst),
+      .s_cxu(cxus[2]));
+
+    // CXU 3: MAC-RELU
+    cx_mac_relu_unit cx_mac_relu_unit_block (
+      .i_clk(clk),
+      .i_rst(rst),
+      .s_cxu(cxus[3]));
+
+    // CXU 0: VFU
+    /*
     localparam STATE_ID_WIDTH      = C_M_CXU_STATE_ID_W;
     localparam QUEUE_DEPTH         = 8*MAX_IDS;
     localparam MAX_READ_IN_FLIGHT  = 1;
     localparam MAX_WRITE_IN_FLIGHT = 1;
 
-    vxu #(
-      .STATE_ID_WIDTH(STATE_ID_WIDTH),
-      .QUEUE_DEPTH(QUEUE_DEPTH),
-      .MAX_READ_IN_FLIGHT(MAX_READ_IN_FLIGHT),
-      .MAX_WRITE_IN_FLIGHT(MAX_READ_IN_FLIGHT))
-    vxu_block (
-      .i_clk(clk),
-      .i_rst(rst),
-      .s_cxu(cxus[1]),
-      .s_alloc_resp(alloc_resps[1]),
-      .s_lkup_resp(lkup_resps[1]),
-      .m_alloc_req(alloc_reqs[1]),
-      .m_lkup_req(lkup_reqs[1]),
-      .m_read_req(read_reqs[1]),
-      .m_write_req(write_reqs[1]),
-      .s_read_stream(read_streams[1]),
-      .m_write_stream(write_streams[1]));
+    for (k = 0; k < NUM_CXUS; ++k) begin 
+      vxu #(
+        .STATE_ID_WIDTH(STATE_ID_WIDTH),
+        .QUEUE_DEPTH(QUEUE_DEPTH),
+        .MAX_READ_IN_FLIGHT(MAX_READ_IN_FLIGHT),
+        .MAX_WRITE_IN_FLIGHT(MAX_READ_IN_FLIGHT))
+      vxu_block (
+        .i_clk(clk),
+        .i_rst(rst),
+        .s_cxu(cxus[k]),
+        .s_alloc_resp(alloc_resps[k]),
+        .s_lkup_resp(lkup_resps[k]),
+        .m_alloc_req(alloc_reqs[k]),
+        .m_lkup_req(lkup_reqs[k]),
+        .m_read_req(read_reqs[k]),
+        .m_write_req(write_reqs[k]),
+        .s_read_stream(read_streams[k]),
+        .m_write_stream(write_streams[k]));
+    end
+    */
+    always_comb begin
+      cxus[0].req_ready = 1'b0;
+      cxus[0].resp_valid = 1'b0;
+      cxus[0].resp_data = '0;
+      cxus[0].resp_status = '0;
+    end
 
     // CX SWITCH
 
     cx_switch_unit #(
-      .NUM_SLAVES(2))
+      .NUM_SLAVES(NUM_CXUS+3))
     cx_switch_unit_block (
       .i_clk(clk),
       .i_rst(rst),
       .i_cxu(cxu),
       .o_cxus(cxus));
 
-    //FIXME
-    assign inv_valid = 0;
-    assign inv_addr = 0;
-
     ////////////////////////////////////////////////////
     // DMA
     ////////////////////////////////////////////////////
 
+    axi64_interface #(
+      .ID_WIDTH(CXU_ID_WIDTH+MEM_ID_WIDTH))
+    axi64 ();
+
+    /*
     gen_interface #(
       .DATA_WIDTH($bits(track_entry_t)), 
       .ID_WIDTH(CXU_ID_WIDTH))
@@ -340,9 +363,6 @@ module cva5_sim
       .DATA_WIDTH(MEM_DATA_WIDTH),   
       .ID_WIDTH(MEM_ID_WIDTH))
     read_streams [NUM_CXUS] ();
-    axi64_interface #(
-      .ID_WIDTH(CXU_ID_WIDTH+MEM_ID_WIDTH))
-    axi64 ();
 
     cx_dma_unit #(.NUM_CXUS(NUM_CXUS))
     cx_dma_unit_block (
@@ -356,7 +376,11 @@ module cva5_sim
       .s_read_reqs(read_reqs),
       .s_write_reqs(write_reqs),
       .m_read_streams(read_streams),
-      .s_write_streams(write_streams));
+      .s_write_streams(write_streams),
+      .inv_ack(inv_ack),
+      .inv_valid(inv_valid),
+      .inv_addr(inv_addr));
+    */
 
     ////////////////////////////////////////////////////
     //AXI adapter

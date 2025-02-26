@@ -49,6 +49,17 @@ core/axi_master.sv
 core/avalon_master.sv  
 core/wishbone_master.sv  
 
+rvv-lite/src/multiported-ram/config.vh
+rvv-lite/src/multiported-ram/utils.vh
+rvv-lite/src/multiported-ram/mpram_gen.v
+rvv-lite/src/multiported-ram/mpram_gen_be.v
+rvv-lite/src/multiported-ram/dpram.v
+rvv-lite/src/multiported-ram/dpram_be.v
+rvv-lite/src/multiported-ram/mrram.v
+rvv-lite/src/multiported-ram/mrram_be.v
+rvv-lite/src/multiported-ram/mpram_xor.v
+rvv-lite/src/multiported-ram/mpram.v
+
 core/tag_bank.sv  
 core/dcache_tag_banks.sv  
 core/amo_alu.sv  
@@ -94,17 +105,6 @@ core/instruction_metadata_and_id_management.sv
 
 core/l1_arbiter.sv  
 core/cva5.sv
-
-rvv-lite/src/multiported-ram/config.vh
-rvv-lite/src/multiported-ram/utils.vh
-rvv-lite/src/multiported-ram/mpram_gen.v
-rvv-lite/src/multiported-ram/mpram_gen_be.v
-rvv-lite/src/multiported-ram/dpram.v
-rvv-lite/src/multiported-ram/dpram_be.v
-rvv-lite/src/multiported-ram/mrram.v
-rvv-lite/src/multiported-ram/mrram_be.v
-rvv-lite/src/multiported-ram/mpram_xor.v
-rvv-lite/src/multiported-ram/mpram.v
 
 rvv-lite/src/opcodes.sv
 rvv-lite/src/vALU/avg_unit.sv
@@ -153,9 +153,13 @@ verilog-axis/rtl/axis_arb_mux.v
 verilog-axis/rtl/axis_demux.v
 
 cx/cx_tracker.sv
+cx/cx_inval_unit.sv
 cx/cx_dma_unit.sv
 cx/cx_switch_unit.sv
 cx/crc.sv
 cx/cx_crc_unit.sv
+cx/cx_mac_unit.sv
+cx/cx_relu_unit.sv
+cx/cx_mac_relu_unit.sv
 
 cx/vxu.sv

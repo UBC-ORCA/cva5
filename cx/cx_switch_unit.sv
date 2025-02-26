@@ -109,7 +109,7 @@ module cx_switch_unit
 
   // Round-robin arbiter for CX responses
   axis_arb_mux #(
-    .S_COUNT(2),
+    .S_COUNT(NUM_SLAVES),
     .DATA_WIDTH($bits(resp_packet_t)),
     .KEEP_ENABLE(0),
     .ID_ENABLE(0),
